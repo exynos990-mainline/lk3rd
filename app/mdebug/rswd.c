@@ -54,7 +54,7 @@ static u8 optable[16] = {
 };
 
 static const char *board_str = TARGET;
-static const char *build_str = "fw v0.91 (" __DATE__ ", " __TIME__ ")";
+static const char *build_str = "fw v1.00 (" __DATE__ ", " __TIME__ ")";
 
 static void _reboot(void) {
 	platform_halt(HALT_ACTION_REBOOT, HALT_REASON_SW_RESET);
@@ -82,149 +82,149 @@ void process_txn(u32 txnid, u32 *rx, int rxc, u32 *tx) {
 #if CONFIG_MDEBUG_TRACE
 		printf("> %02x %02x %04x <\n", RSWD_MSG_CMD(msg), op, n);
 #endif
-		switch (RSWD_MSG_CMD(msg)) {
-		case CMD_NULL:
-			continue;
-		case CMD_SWD_WRITE:
-			while (n-- > 0) {
-				rxc--;
-				status = swd_write(optable[op], *rx++);
-				if (status) {
-					goto done;
-				}
-			}
-			continue;
-		case CMD_SWD_READ:
-			tx[txc++] = RSWD_MSG(CMD_SWD_DATA, 0, n);
-			while (n-- > 0) {
-				status = swd_read(optable[op], tx + txc);
-				if (status) {
-					txc++;
-					while (n-- > 0)
-						tx[txc++] = 0xfefefefe;
-					goto done;
-				}
-				txc++;
-			}
-			continue;
-		case CMD_SWD_DISCARD:
-			while (n-- > 0) {
-				u32 tmp;
-				status = swd_read(optable[op], &tmp);
-				if (status) {
-					goto done;
-				}
-			}
-			continue;
-		case CMD_ATTACH:
-			if (mode != MODE_SWD) {
-				mode = MODE_SWD;
-				swd_init();
-			}
-			swd_reset();
-			continue;
-		case CMD_JTAG_IO:
-			if (mode != MODE_JTAG) {
-				mode = MODE_JTAG;
-				jtag_init();
-			}
-			tx[txc++] = RSWD_MSG(CMD_JTAG_DATA, 0, n);
-			while (n > 0) {
-				unsigned xfer = (n > 32) ? 32 : n;
-				jtag_io(xfer, rx[0], rx[1], tx + txc);
-				rx += 2;
-				rxc -= 2;
-				txc += 1;
-				n -= xfer;
-			}
-			continue;
-		case CMD_JTAG_VRFY:
-			if (mode != MODE_JTAG) {
-				mode = MODE_JTAG;
-				jtag_init();
-			}
-			// (n/32) x 4 words: TMS, TDI, DATA, MASK
-			while (n > 0) {
-				unsigned xfer = (n > 32) ? 32 : n;
-				jtag_io(xfer, rx[0], rx[1], tx + txc);
-				if ((tx[txc] & rx[3]) != rx[2]) {
-					status = ERR_BAD_MATCH;
-					goto done;
-				}
-				rx += 4;
-				rxc -= 4;
-				n -= xfer;
-			}
-			continue;
-		case CMD_JTAG_TX: {
-			unsigned tms = (op & 1) ? 0xFFFFFFFF : 0;
-			if (mode != MODE_JTAG) {
-				mode = MODE_JTAG;
-				jtag_init();
-			}
-			while (n > 0) {
-				unsigned xfer = (n > 32) ? 32 : n;
-				jtag_io(xfer, tms, rx[0], rx);
-				rx++;
-				rxc--;
-				n -= xfer;
-			}
-			continue;
-		}
-		case CMD_JTAG_RX: {
-			unsigned tms = (op & 1) ? 0xFFFFFFFF : 0;
-			unsigned tdi = (op & 2) ? 0xFFFFFFFF : 0;
-			if (mode != MODE_JTAG) {
-				mode = MODE_JTAG;
-				jtag_init();
-			}
-			tx[txc++] = RSWD_MSG(CMD_JTAG_DATA, 0, n);
-			while (n > 0) {
-				unsigned xfer = (n > 32) ? 32 : n;
-				jtag_io(xfer, tms, tdi, tx + txc);
-				txc++;
-				n -= xfer;
-			}
-			continue;
-		}
-		case CMD_RESET:
-			swd_hw_reset(n);
-			continue;
-		case CMD_DOWNLOAD: {
-			//u32 *addr = (void*) *rx++;
-			rxc--;
-			while (n) {
-				//*addr++ = *rx++;
-				rx++;
-				rxc--;
-			}
-			continue;
-		}
-		case CMD_EXECUTE:
-			//func = (void*) *rx++;
-			rxc--;
-			continue;
-		case CMD_TRACE:
-			swdp_trace = op;
-			continue;
-		case CMD_BOOTLOADER:
-			func = _reboot;
-			continue;
-		case CMD_SET_CLOCK:
-			n = swd_set_clock(n);
-			printf("swdp clock is now %d KHz\n", n);
-			if (host_version >= RSWD_VERSION_1_0) {
-				tx[txc++] = RSWD_MSG(CMD_CLOCK_KHZ, 0, n);
-			}
-			continue;
-		case CMD_SWO_CLOCK:
-			n = swo_set_clock(n);
-			printf("swo clock is now %d KHz\n", n);
-			continue;
-		case CMD_VERSION:
-			host_version = n;
-			tx[txc++] = RSWD_MSG(CMD_VERSION, 0, RSWD_VERSION);
-
+        switch (RSWD_MSG_CMD(msg)) {
+            case CMD_NULL:
+                continue;
+            case CMD_SWD_WRITE:
+                while (n-- > 0) {
+                    rxc--;
+                    status = swd_write(optable[op], *rx++);
+                    if (status) {
+                        goto done;
+                    }
+                }
+                continue;
+            case CMD_SWD_READ:
+                tx[txc++] = RSWD_MSG(CMD_SWD_DATA, 0, n);
+                while (n-- > 0) {
+                    status = swd_read(optable[op], tx + txc);
+                    if (status) {
+                        txc++;
+                        while (n-- > 0)
+                            tx[txc++] = 0xfefefefe;
+                        goto done;
+                    }
+                    txc++;
+                }
+                continue;
+            case CMD_SWD_DISCARD:
+                while (n-- > 0) {
+                    u32 tmp;
+                    status = swd_read(optable[op], &tmp);
+                    if (status) {
+                        goto done;
+                    }
+                }
+                continue;
+            case CMD_ATTACH:
+                if (mode != MODE_SWD) {
+                    mode = MODE_SWD;
+                    swd_init();
+                }
+                swd_reset(op);
+                continue;
+            case CMD_JTAG_IO:
+                if (mode != MODE_JTAG) {
+                    mode = MODE_JTAG;
+                    jtag_init();
+                }
+                tx[txc++] = RSWD_MSG(CMD_JTAG_DATA, 0, n);
+                while (n > 0) {
+                    unsigned xfer = (n > 32) ? 32 : n;
+                    jtag_io(xfer, rx[0], rx[1], tx + txc);
+                    rx += 2;
+                    rxc -= 2;
+                    txc += 1;
+                    n -= xfer;
+                }
+                continue;
+            case CMD_JTAG_VRFY:
+                if (mode != MODE_JTAG) {
+                    mode = MODE_JTAG;
+                    jtag_init();
+                }
+                // (n/32) x 4 words: TMS, TDI, DATA, MASK
+                while (n > 0) {
+                    unsigned xfer = (n > 32) ? 32 : n;
+                    jtag_io(xfer, rx[0], rx[1], tx + txc);
+                    if ((tx[txc] & rx[3]) != rx[2]) {
+                        status = ERR_BAD_MATCH;
+                        goto done;
+                    }
+                    rx += 4;
+                    rxc -= 4;
+                    n -= xfer;
+                }
+                continue;
+            case CMD_JTAG_TX: {
+                unsigned tms = (op & 1) ? 0xFFFFFFFF : 0;
+                if (mode != MODE_JTAG) {
+                    mode = MODE_JTAG;
+                    jtag_init();
+                }
+                while (n > 0) {
+                    unsigned xfer = (n > 32) ? 32 : n;
+                    jtag_io(xfer, tms, rx[0], rx);
+                    rx++;
+                    rxc--;
+                    n -= xfer;
+                }
+                continue;
+            }
+            case CMD_JTAG_RX: {
+                unsigned tms = (op & 1) ? 0xFFFFFFFF : 0;
+                unsigned tdi = (op & 2) ? 0xFFFFFFFF : 0;
+                if (mode != MODE_JTAG) {
+                    mode = MODE_JTAG;
+                    jtag_init();
+                }
+                tx[txc++] = RSWD_MSG(CMD_JTAG_DATA, 0, n);
+                while (n > 0) {
+                    unsigned xfer = (n > 32) ? 32 : n;
+                    jtag_io(xfer, tms, tdi, tx + txc);
+                    txc++;
+                    n -= xfer;
+                }
+                continue;
+            }
+            case CMD_RESET:
+                swd_hw_reset(n);
+                continue;
+            case CMD_DOWNLOAD: {
+                //u32 *addr = (void*) *rx++;
+                rxc--;
+                while (n) {
+                    //*addr++ = *rx++;
+                    rx++;
+                    rxc--;
+                }
+                continue;
+            }
+            case CMD_EXECUTE:
+                //func = (void*) *rx++;
+                rxc--;
+                continue;
+            case CMD_TRACE:
+                swdp_trace = op;
+                continue;
+            case CMD_BOOTLOADER:
+                func = _reboot;
+                continue;
+            case CMD_SET_CLOCK:
+                n = swd_set_clock(n);
+                if (host_version >= RSWD_VERSION_1_0) {
+                    tx[txc++] = RSWD_MSG(CMD_CLOCK_KHZ, 0, n);
+                }
+                continue;
+            case CMD_SWO_CLOCK:
+                n = swo_set_clock(n);
+                if (host_version >= RSWD_VERSION_1_0) {
+                    tx[txc++] = RSWD_MSG(CMD_CLOCK_KHZ, 1, n);
+                }
+                continue;
+            case CMD_VERSION:
+                host_version = n;
+                tx[txc++] = RSWD_MSG(CMD_VERSION, 0, RSWD_VERSION);
 			n = strlen(board_str);
 			memcpy(tx + txc + 1, board_str, n + 1);
 			n = (n + 4) / 4;
