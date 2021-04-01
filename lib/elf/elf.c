@@ -159,6 +159,12 @@ static int verify_eheader(const void *header)
 #elif ARCH_MICROBLAZE
     if (eheader->e_machine != EM_MICROBLAZE)
         return ERR_NOT_FOUND;
+#elif ARCH_RISCV
+    if (eheader->e_machine != EM_RISCV)
+        return ERR_NOT_FOUND;
+#elif ARCH_VPU
+    if (eheader->e_machine != EM_VC4)
+        return ERR_NOT_FOUND;
 #else
 #error find proper EM_ define for your machine
 #endif
