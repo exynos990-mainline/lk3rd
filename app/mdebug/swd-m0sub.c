@@ -109,13 +109,16 @@ void swd_init(void) {
 	writel((1 << 11) | (1 << 14) | (1 << 15), SGPIO_OUT);
 	writel((1 << 11) | (1 << 14) | (1 << 15), SGPIO_OEN);
 
-	writel(0, M4_TXEV);
-	writel(M0_SUB_RST, RESET_CTRL0);
-	writel(0x18000000, M0SUB_ZEROMAP);
-	writel(0xffffffff, 0x18004000);
-	memcpy((void*) 0x18000000, zero_bin, sizeof(zero_bin));
-	DSB;
-	writel(0, RESET_CTRL0);
+    writel(0, M4_TXEV);
+    writel(M0_SUB_RST, RESET_CTRL0);
+    writel(0x18000000, M0SUB_ZEROMAP);
+    writel(0xffffffff, 0x18004000);
+    unsigned char *ptr = (unsigned char *)0x18000000;
+    for (size_t i = 0; i < sizeof(zero_bin); i++) {
+        ptr[i] = zero_bin[i];
+    }
+    DSB;
+    writel(0, RESET_CTRL0);
 }
 
 int swd_write(unsigned hdr, unsigned data) {
