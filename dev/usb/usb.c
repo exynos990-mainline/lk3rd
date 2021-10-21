@@ -5,6 +5,8 @@
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT
  */
+#include <dev/usb.h>
+
 #include <lk/debug.h>
 #include <lk/trace.h>
 #include <lk/err.h>
@@ -13,8 +15,15 @@
 #include <assert.h>
 #include <lk/list.h>
 #include <dev/usbc.h>
-#include <dev/usb.h>
 #include <lk/init.h>
+
+/*
+ * USB device side support. Handles configuration and main high level host requests.
+ * USB device controller must pump the stack via usbc_callback() and implement the
+ * usbc function interface.
+ */
+
+/* TODO: make big endian safe */
 
 #define LOCAL_TRACE 0
 
@@ -38,9 +47,11 @@ typedef struct {
 
 static void usb_do_callbacks(usb_callback_op_t op, const union usb_callback_args *args);
 
-static void append_desc_data(usb_descriptor *desc, const void *dat, size_t len)
-{
+static status_t append_desc_data(usb_descriptor *desc, const void *dat, size_t len) {
     uint8_t *ptr = malloc(desc->len + len);
+    if (!ptr) {
+        return ERR_NO_MEMORY;
+    }
 
     memcpy(ptr, desc->desc, desc->len);
     memcpy(ptr + desc->len, dat, len);
@@ -52,6 +63,8 @@ static void append_desc_data(usb_descriptor *desc, const void *dat, size_t len)
 
     desc->desc = ptr;
     desc->len += len;
+
+    return NO_ERROR;
 }
 
 static uint8_t usb_get_current_iface_num(const usb_descriptor *desc)
@@ -71,17 +84,18 @@ uint8_t usb_get_current_iface_num_lowspeed(void)
     return usb_get_current_iface_num(&usb.config->lowspeed.config);
 }
 
-/* returns the interface number assigned */
-static int usb_append_interface(usb_descriptor *desc, const uint8_t *int_descr, size_t len)
-{
+/* returns the interface number assigned or error */
+static int usb_append_interface(usb_descriptor *desc, const uint8_t *int_descr, size_t len) {
     uint8_t *ptr = malloc(len);
-    int interface_num;
+    if (!ptr) {
+        return ERR_NO_MEMORY;
+    }
 
     // create a temporary copy of the interface
     memcpy(ptr, int_descr, len);
 
     // find the last interface used
-    interface_num = usb_get_current_iface_num(desc);  // current interface
+    int interface_num = usb_get_current_iface_num(desc);  // current interface
 
     // patch our interface descriptor with the new id
     ptr[2] = interface_num;
@@ -95,6 +109,7 @@ static int usb_append_interface(usb_descriptor *desc, const uint8_t *int_descr, 
     interface_num++;
     ((uint8_t *)desc->desc)[4] = interface_num;
 
+    DEBUG_ASSERT(interface_num > 0);
     return interface_num - 1;
 }
 
@@ -129,8 +144,7 @@ void usb_set_string_descriptor(usb_descriptor *desc, const char *string)
     desc->len = datalen;
 }
 
-static void set_usb_id(uint16_t vendor, uint16_t product)
-{
+static void set_usb_id(uint16_t vendor, uint16_t product) {
     // patch the current configuration to with the vendor/product id
     ((uint16_t *)usb.config->lowspeed.device.desc)[4] = vendor;
     ((uint16_t *)usb.config->lowspeed.device.desc)[5] = product;
@@ -145,8 +159,9 @@ status_t usb_add_string(const char *string, uint8_t id)
     size_t len = strlen(string);
 
     uint16_t *strbuf = malloc(len * 2 + 2);
-    if (!strbuf)
+    if (!strbuf) {
         return ERR_NO_MEMORY;
+    }
 
     /* build the usb string descriptor */
     strbuf[0] = 0x300 | (len * 2 + 2);
@@ -188,8 +203,9 @@ status_t usb_register_callback(usb_callback_t cb, void *cookie)
     DEBUG_ASSERT(cb);
 
     usb_callback_container_t *c = malloc(sizeof(usb_callback_container_t));
-    if (!c)
+    if (!c) {
         return ERR_NO_MEMORY;
+    }
 
     c->cb = cb;
     c->cookie = cookie;
