@@ -122,8 +122,16 @@ pktbuf_t *pktbuf_alloc(void)
     return p;
 }
 
-pktbuf_t *pktbuf_alloc_empty(void)
-{
+void pktbuf_reset(pktbuf_t *p, uint32_t header_sz) {
+    DEBUG_ASSERT(p);
+    DEBUG_ASSERT(p->buffer);
+    DEBUG_ASSERT(header_sz < p->blen);
+
+    p->data = p->buffer + header_sz;
+    p->dlen = 0;
+}
+
+pktbuf_t *pktbuf_alloc_empty(void) {
     pktbuf_t *p = (pktbuf_t *) get_pool_object();
 
     p->flags = PKTBUF_FLAG_EOF;
