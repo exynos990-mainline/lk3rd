@@ -8,6 +8,9 @@
 #pragma once
 
 #include <lib/bio.h>
+#include <lk/compiler.h>
+
+__BEGIN_CDECLS
 
 typedef void *bcache_t;
 
@@ -20,3 +23,4 @@ int bcache_read_block(bcache_t, void *, uint block);
 int bcache_get_block(bcache_t, void **, uint block);
 int bcache_put_block(bcache_t, uint block);
 
+__END_CDECLS
