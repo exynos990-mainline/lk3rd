@@ -67,7 +67,7 @@ static inline off_t fat32_offset_for_cluster(fat_fs_t *fat, uint32_t cluster)
 char *fat32_dir_get_filename(uint8_t *dir, off_t offset, int lfn_sequences)
 {
     int result_len = 1 + (lfn_sequences == 0 ? 12 : (lfn_sequences * 26));
-    char *result = malloc(result_len);
+    char *result = (char *)malloc(result_len);
     int j = 0;
     memset(result, 0x00, result_len);
 
@@ -123,7 +123,7 @@ status_t fat32_open_file(fscookie *cookie, const char *path, filecookie **fcooki
     fat_fs_t *fat = (fat_fs_t *)cookie;
     status_t result = ERR_GENERIC;
 
-    uint8_t *dir = malloc(fat->bytes_per_cluster);
+    uint8_t *dir = (uint8_t *)malloc(fat->bytes_per_cluster);
     uint32_t dir_cluster = fat->root_cluster;
     fat_file_t *file = NULL;
 
@@ -173,7 +173,7 @@ status_t fat32_open_file(fscookie *cookie, const char *path, filecookie **fcooki
             if (matched) {
                 uint16_t target_cluster = fat_read16(dir, offset + 0x1a);
                 if (done == true) {
-                    file = malloc(sizeof(fat_file_t));
+                    file = (fat_file_t *)malloc(sizeof(fat_file_t));
                     file->fat_fs = fat;
                     file->start_cluster = target_cluster;
                     file->length = fat_read32(dir, offset + 0x1c);
@@ -216,11 +216,11 @@ out:
     return result;
 }
 
-ssize_t fat32_read_file(filecookie *fcookie, void *buf, off_t offset, size_t len)
-{
+ssize_t fat32_read_file(filecookie *fcookie, void *_buf, off_t offset, size_t len) {
     fat_file_t *file = (fat_file_t *)fcookie;
     fat_fs_t *fat = file->fat_fs;
     bdev_t *dev = fat->dev;
+    uint8_t *buf = (uint8_t *)_buf;
 
     uint32_t cluster = 0;
     if (offset <= fat->bytes_per_cluster) {
