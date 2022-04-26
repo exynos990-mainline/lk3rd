@@ -128,6 +128,8 @@ static void put_mount(struct fs_mount *mount)
 {
     mutex_acquire(&mount_lock);
     if ((--mount->ref) == 0) {
+        LTRACEF("last ref, unmounting fs at '%s'\n", mount->path);
+
         list_delete(&mount->node);
         mount->api->unmount(mount->cookie);
         free(mount->path);
