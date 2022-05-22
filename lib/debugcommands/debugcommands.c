@@ -312,8 +312,10 @@ static int cmd_sleep(int argc, const cmd_args *argv)
     return 0;
 }
 
-static int cmd_crash(int argc, const cmd_args *argv)
-{
+/* fix warning for the near-null pointer dereference below with gcc 12.x+ */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+static int cmd_crash(int argc, const console_cmd_args *argv) {
     /* should crash */
     volatile uint32_t *ptr = (void *)1;
     *ptr = 1;
@@ -323,6 +325,7 @@ static int cmd_crash(int argc, const cmd_args *argv)
 
     return 0;
 }
+#pragma GCC diagnostic pop
 
 static int cmd_stackstomp(int argc, const cmd_args *argv)
 {
