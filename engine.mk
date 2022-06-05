@@ -275,7 +275,7 @@ clean: $(EXTRA_CLEANDEPS)
 	rm -f $(ALLOBJS) $(DEPS) $(GENERATED) $(OUTBIN) $(OUTELF) $(OUTELF).lst $(OUTELF).debug.lst $(OUTELF).sym $(OUTELF).sym.sorted $(OUTELF).size $(OUTELF).hex $(OUTELF).dump
 
 install: all
-	scp $(OUTBIN) 192.168.0.4:/tftproot
+	scp $(OUTBIN) 192.168.0.4:/tftpboot
 
 # generate a config.h file with all of the GLOBAL_DEFINES laid out in #define format
 configheader:
