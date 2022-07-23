@@ -79,12 +79,14 @@ ARCH_CFLAGS :=
 ARCH_CPPFLAGS :=
 ARCH_ASMFLAGS :=
 ARCH_LDFLAGS :=
+ARCH_OBJDUMP_FLAGS :=
+THUMBCFLAGS := # optional compile switches set by arm architecture when compiling in thumb mode
 
 # top level rule
 all:: $(ANDROID_BOOT_IMAGE) $(OUTBIN_LK3RD) $(OUTBIN) $(OUTELF).lst $(OUTELF).debug.lst $(OUTELF).sym $(OUTELF).sym.sorted $(OUTELF).size $(OUTELF).dump $(BUILDDIR)/srcfiles.txt $(BUILDDIR)/include_paths.txt
 
 # master module object list
-ALLOBJS_MODULE :=
+ALLMODULE_OBJS :=
 
 # master object list (for dep generation)
 ALLOBJS :=
@@ -197,7 +199,6 @@ ifneq ($(EXTERNAL_DEFINES),)
 GLOBAL_DEFINES += $(EXTERNAL_DEFINES)
 $(info EXTERNAL_DEFINES = $(EXTERNAL_DEFINES))
 endif
-
 
 # prefix all of the paths in GLOBAL_INCLUDES with -I
 GLOBAL_INCLUDES := $(addprefix -I,$(GLOBAL_INCLUDES))
