@@ -22,6 +22,10 @@ MODULE_SRCS += \
 	$(LOCAL_DIR)/qsort.c \
 	$(LOCAL_DIR)/eabi.c
 
+MODULE_FLOAT_SRCS += \
+	$(LOCAL_DIR)/printf.c \
+	$(LOCAL_DIR)/atof.c \
+
 MODULE_COMPILEFLAGS += -fno-builtin
 
 include $(LOCAL_DIR)/string/rules.mk
