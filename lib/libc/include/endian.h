@@ -42,10 +42,11 @@
 #define BE16(val) SWAP_16(val)
 #endif
 
-#define LE32SWAP(var) (var) = LE32(var);
-#define LE16SWAP(var) (var) = LE16(var);
-#define BE32SWAP(var) (var) = BE32(var);
-#define BE16SWAP(var) (var) = BE16(var);
+#define LE32SWAP(var) do { (var) = LE32(var); } while (0)
+#define LE16SWAP(var) do { (var) = LE16(var); } while (0)
+#define BE64SWAP(var) do { (var) = BE64(var); } while (0)
+#define BE32SWAP(var) do { (var) = BE32(var); } while (0)
+#define BE16SWAP(var) do { (var) = BE16(var); } while (0)
 
 /* classic network byte swap stuff */
 #define ntohs(n) BE16(n)
