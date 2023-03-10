@@ -198,34 +198,36 @@ __NO_INLINE static void bench_sincos(void)
 {
     printf("touching the floating point unit\n");
     __UNUSED volatile double _hole = sin(0);
+    volatile float input_f = 1234567.0f;
+    volatile double input_d = 1234567.0;
 
-    uint count = arch_cycle_count();
-    __UNUSED double a = sin(2.0);
+    ulong count = arch_cycle_count();
+    __UNUSED volatile double d = sin(input_d);
     count = arch_cycle_count() - count;
     printf("took %u cycles for sin()\n", count);
 
     count = arch_cycle_count();
-    a = cos(2.0);
+    d = cos(input_d);
     count = arch_cycle_count() - count;
     printf("took %u cycles for cos()\n", count);
 
     count = arch_cycle_count();
-    a = sinf(2.0);
+    __UNUSED volatile float f = sinf(input_f);
     count = arch_cycle_count() - count;
     printf("took %u cycles for sinf()\n", count);
 
     count = arch_cycle_count();
-    a = cosf(2.0);
+    f = cosf(input_f);
     count = arch_cycle_count() - count;
     printf("took %u cycles for cosf()\n", count);
 
     count = arch_cycle_count();
-    a = sqrt(1234567.0);
+    d = sqrt(input_d);
     count = arch_cycle_count() - count;
     printf("took %u cycles for sqrt()\n", count);
 
     count = arch_cycle_count();
-    a = sqrtf(1234567.0f);
+    f = sqrtf(input_f);
     count = arch_cycle_count() - count;
     printf("took %u cycles for sqrtf()\n", count);
 }
