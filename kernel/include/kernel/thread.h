@@ -65,6 +65,14 @@ enum thread_tls_list {
 
 #define THREAD_MAGIC (0x74687264) // 'thrd'
 
+#if THREAD_STATS
+struct thread_specific_stats {
+    lk_bigtime_t total_run_time;
+    lk_bigtime_t last_run_timestamp;
+    ulong schedules; // times this thread is scheduled to run.
+};
+#endif
+
 typedef struct thread {
     int magic;
     struct list_node thread_list_node;
@@ -106,6 +114,10 @@ typedef struct thread {
     uintptr_t tls[MAX_TLS_ENTRY];
 
     char name[32];
+
+#if THREAD_STATS
+    struct thread_specific_stats stats;
+#endif
 } thread_t;
 
 #if WITH_SMP
@@ -158,6 +170,8 @@ status_t thread_set_real_time(thread_t *t);
 void dump_thread(thread_t *t);
 void arch_dump_thread(thread_t *t);
 void dump_all_threads(void);
+void dump_all_threads_unlocked(void);
+void dump_threads_stats(void);
 
 /* scheduler routines */
 void thread_yield(void); /* give up the cpu voluntarily */

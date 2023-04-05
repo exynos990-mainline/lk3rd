@@ -78,6 +78,7 @@ static int cmd_threadstats(int argc, const cmd_args *argv)
         printf("\ttimers: %lu\n", thread_stats[i].timers);
     }
 
+    dump_threads_stats();
     return 0;
 }
 
