@@ -176,6 +176,35 @@ ifndef ARCH
 $(error couldn't find arch or platform doesn't define arch)
 endif
 include arch/$(ARCH)/rules.mk
+ifndef TOOLCHAIN_PREFIX
+$(error TOOLCHAIN_PREFIX not set in the arch rules.mk)
+endif
+
+# default to no ccache
+CCACHE ?=
+CC ?= $(CCACHE) $(TOOLCHAIN_PREFIX)gcc
+LD ?= $(TOOLCHAIN_PREFIX)ld
+OBJDUMP ?= $(TOOLCHAIN_PREFIX)objdump
+OBJCOPY ?= $(TOOLCHAIN_PREFIX)objcopy
+CPPFILT ?= $(TOOLCHAIN_PREFIX)c++filt
+SIZE ?= $(TOOLCHAIN_PREFIX)size
+NM ?= $(TOOLCHAIN_PREFIX)nm
+STRIP ?= $(TOOLCHAIN_PREFIX)strip
+
+# Now that CC is defined we can check if warning flags are supported and add
+# them to GLOBAL_COMPILEFLAGS if they are.
+ifeq ($(call is_warning_flag_supported,-Wnonnull-compare),yes)
+GLOBAL_COMPILEFLAGS += -Wno-nonnull-compare
+endif
+# Ideally we would move this check to arm64/rules.mk, but we can only check
+# for supported warning flags once CC is defined.
+ifeq ($(ARCH),arm64)
+# Clang incorrectly diagnoses msr operations as need a 64-bit operand even if
+# the underlying register is actually 32 bits. Silence this common warning.
+ifeq ($(call is_warning_flag_supported,-Wasm-operand-widths),yes)
+ARCH_COMPILEFLAGS += -Wno-asm-operand-widths
+endif
+endif
 
 $(info PROJECT = $(PROJECT))
 $(info PLATFORM = $(PLATFORM))
