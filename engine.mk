@@ -29,8 +29,8 @@ make-make:
 	@PROJECT=$(project-name) $(MAKE) -rR -f $(LOCAL_MAKEFILE) $(filter-out $(project-name), $(MAKECMDGOALS))
 
 .PHONY: make-make
-endif
-endif
+endif # expansion of project-name
+endif # project-name != null
 
 # some additional rules to print some help
 include make/help.mk
