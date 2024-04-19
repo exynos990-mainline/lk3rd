@@ -86,7 +86,7 @@ endif
 # flags that are sometimes nice to enable to catch problems but too strict to have on all the time.
 # add to global flags from time to time to find things, otherwise only available with a module
 # option (see make/module.mk re: MODULE_OPTIONS).
-EXTRA_MODULE_COMPILEFLAGS := -Wmissing-declarations
+EXTRA_MODULE_COMPILEFLAGS := -Wmissing-declarations -Wredundant-decls
 EXTRA_MODULE_CFLAGS := -Wmissing-prototypes
 EXTRA_MODULE_CPPFLAGS :=
 EXTRA_MODULE_ASMFLAGS :=
@@ -94,6 +94,7 @@ EXTRA_MODULE_ASMFLAGS :=
 #GLOBAL_COMPILEFLAGS += -Wpacked
 #GLOBAL_COMPILEFLAGS += -Wpadded
 #GLOBAL_COMPILEFLAGS += -Winline
+#GLOBAL_COMPILEFLAGS += -Wredundant-decls
 
 # if WERROR is set, add to the compile args
 ifeq (true,$(call TOBOOL,$(WERROR)))
