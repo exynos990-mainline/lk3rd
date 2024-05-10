@@ -90,4 +90,14 @@ static inline uint arch_curr_cpu_num(void)
 {
     return 0;
 }
+
+// Default barriers for architectures that generally don't need them
+// TODO: do we need these for or1k?
+#define mb()        CF
+#define wmb()       CF
+#define rmb()       CF
+#define smp_mb()    CF
+#define smp_wmb()   CF
+#define smp_rmb()   CF
+
 #endif // !ASSEMBLY
