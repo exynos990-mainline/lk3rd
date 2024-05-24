@@ -15,7 +15,9 @@ scripts/toolpaths.local
 .cproject
 .project
 .settings/
-.vscode/
 *.img
 *.tar
 /build
+.clangd
+.vscode
+.cache
