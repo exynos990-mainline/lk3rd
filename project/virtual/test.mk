@@ -9,7 +9,7 @@ MODULES += \
   lib/cksum \
   lib/debugcommands \
   lib/libm \
-  lib/version
+  lib/unittest \
 
 # set a build system variable for other modules to include test code
 # on their own.
