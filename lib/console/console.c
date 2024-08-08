@@ -791,26 +791,36 @@ console_cmd console_get_command_handler(const char *commandstr)
         return NULL;
 }
 
-void console_register_commands(cmd_block *block)
-{
-    DEBUG_ASSERT(block);
-    DEBUG_ASSERT(block->next == NULL);
-
-    block->next = command_list;
-    command_list = block;
+// Compare alphabetically by name.
+static int compare_cmds(const void *cmd1, const void *cmd2) {
+    return strcmp(((const console_cmd_block *)cmd1)->name,
+                  ((const console_cmd_block *)cmd2)->name);
 }
 
+static int cmd_help_impl(uint8_t availability_mask) {
+    printf("command list by block:\n");
 
-static int cmd_help_impl(uint8_t availability_mask)
-{
-    printf("command list:\n");
+    // If we're not panicking and are free to allocate memory, sort the commands
+    // alphabetically before printing.
+    const console_cmd_block *start = &__start_commands;
+    const console_cmd_block *end = &__stop_commands;
+    console_cmd_block *sorted = NULL;
+    if ((availability_mask & CMD_AVAIL_PANIC) == 0) {
+        size_t num_cmds = end - start;
+        size_t size_bytes = num_cmds * sizeof(console_cmd_block);
+        sorted = (console_cmd_block *) malloc(size_bytes);
+        if (sorted) {
+            memcpy(sorted, start, size_bytes);
+            qsort(sorted, num_cmds, sizeof(console_cmd_block), compare_cmds);
+            start = sorted;
+            end = sorted + num_cmds;
+        }
+    }
 
-    cmd_block *block;
-    size_t i;
-
-    for (block = command_list; block != NULL; block = block->next) {
-        const cmd *curr_cmd = block->list;
-        for (i = 0; i < block->count; i++) {
+    for (const console_cmd_block *block = start; block != end; block++) {
+        const console_cmd *curr_cmd = block->list;
+        printf("  [%s]\n", block->name);
+        for (size_t i = 0; i < block->count; i++) {
             if ((availability_mask & curr_cmd[i].availability_mask) == 0) {
                 // Skip commands that aren't available in the current shell.
                 continue;
@@ -820,6 +830,9 @@ static int cmd_help_impl(uint8_t availability_mask)
         }
     }
 
+    if (sorted) {
+        free(sorted);
+    }
     return 0;
 }
 
