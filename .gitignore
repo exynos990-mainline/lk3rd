@@ -6,7 +6,7 @@ TAGS
 local.mk
 *.orig
 cscope.*
-doit
+doit*
 t
 tagit
 blk.bin
@@ -21,3 +21,4 @@ scripts/toolpaths.local
 .clangd
 .vscode
 .cache
+compile_commands.json
