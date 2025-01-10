@@ -1,5 +1,8 @@
 #include "defer.h"
+<<<<<<< HEAD
 #include "kernel/vm.h"
+=======
+>>>>>>> 35432174 ([lib][uefi] fix a few warnings and a little code tidying)
 #include "pe.h"
 
 #include <lib/bio.h>
@@ -13,7 +16,22 @@
 #include <string.h>
 #include <sys/types.h>
 
+<<<<<<< HEAD
 #include "efi.h"
+=======
+#include "configuration_table.h"
+#include "protocols/simple_text_output_protocol.h"
+#include "runtime_service.h"
+#include "runtime_service_provider.h"
+#include "switch_stack.h"
+#include "system_table.h"
+#include "text_protocol.h"
+
+namespace {
+
+constexpr auto EFI_SYSTEM_TABLE_SIGNATURE =
+    static_cast<u64>(0x5453595320494249ULL);
+>>>>>>> 35432174 ([lib][uefi] fix a few warnings and a little code tidying)
 
 // ASCII "PE\x0\x0"
 
@@ -34,7 +52,13 @@ EfiStatus output_string(struct EfiSimpleTextOutputProtocol *self,
   return SUCCESS;
 }
 
+<<<<<<< HEAD
 typedef int (*EfiEntry)(void *handle, struct EfiSystemTable *system);
+=======
+constexpr size_t BIT26 = 1 << 26;
+constexpr size_t BIT11 = 1 << 11;
+constexpr size_t BIT10 = 1 << 10;
+>>>>>>> 35432174 ([lib][uefi] fix a few warnings and a little code tidying)
 
 void *alloc_page(size_t size) {
   void *vptr{};
@@ -80,7 +104,20 @@ int load_sections_and_execute(bdev_t *dev,
   EfiSimpleTextOutputProtocol console_out;
   console_out.output_string = output_string;
   table.con_out = &console_out;
+<<<<<<< HEAD
   return entry(nullptr, &table);
+=======
+  table.configuration_table =
+      reinterpret_cast<EfiConfigurationTable *>(alloc_page(PAGE_SIZE));
+  setup_configuration_table(&table);
+
+  constexpr size_t kStackSize = 8 * 1024ul * 1024;
+  auto stack = reinterpret_cast<char *>(alloc_page(kStackSize, 23));
+  memset(stack, 0, kStackSize);
+  printf("Calling kernel with stack [%p, %p]\n", stack,
+         stack + kStackSize - 1);
+  return call_with_stack(stack + kStackSize, entry, image_base, &table);
+>>>>>>> 35432174 ([lib][uefi] fix a few warnings and a little code tidying)
 }
 
 int load_pe_file(const char *blkdev) {
@@ -143,3 +180,5 @@ int cmd_uefi_load(int argc, const console_cmd_args *argv) {
 STATIC_COMMAND_START
 STATIC_COMMAND("uefi_load", "load UEFI application and run it", &cmd_uefi_load)
 STATIC_COMMAND_END(uefi);
+
+} // namespace
