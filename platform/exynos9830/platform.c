@@ -38,7 +38,6 @@
 #include <platform/dvfs_info.h>
 #include <platform/mmu/mmu_func.h>
 #include <dev/mmc.h>
-
 #include <lib/font_display.h>
 #include <lib/logo_display.h>
 #include <target/dpu_config.h>
@@ -75,6 +74,7 @@ unsigned int dram_info[24] = { 0, 0, 0, 0 };
 unsigned long long dram_size_info = 0;
 unsigned int secure_os_loaded = 0;
 
+int deconbefore = 0;
 
 #ifdef CONFIG_GET_B_REV_FROM_ADC
 int get_board_rev_adc(int *sh)
@@ -312,6 +312,8 @@ void platform_early_init(void)
 		clean_invalidate_dcache_all();
 	}
 
+volatile int *reg_ptr = (int *)(DECON_F_BASE + HW_SW_TRIG_CONTROL);
+deconbefore = *reg_ptr;
 	// Temporary, since we do not have panel driver
 	*(int*) (DECON_F_BASE + HW_SW_TRIG_CONTROL) = 0x1281;
 
@@ -399,6 +401,7 @@ void platform_init(void)
 			ufs_init(2);
 	}
 
+print_lcd_update(FONT_BLACK, FONT_RED, "Decon before: %i", deconbefore);
 	/*
 	 * Initialize mmc for all channel.
 	 * Sometimes need mmc device when it is not boot device.

@@ -37,6 +37,7 @@
 #include <dev/scsi.h>
 #include <dev/mmc.h>
 #include <arch/arch_ops.h>
+#include <lib/font_display.h>
 
 /* Memory node */
 #define SIZE_4GB		(0x100000000)
@@ -247,7 +248,7 @@ static void set_bootargs(void)
 static void configure_dtb(void)
 {
 	char str[BUFFER_SIZE];
-	u32 soc_ver = 0;
+/*	u32 soc_ver = 0;
 	u64 dram_size = *(u64 *)BL_SYS_INFO_DRAM_SIZE;
 	unsigned long sec_dram_base = 0;
 	unsigned int sec_dram_size = 0;
@@ -265,15 +266,15 @@ static void configure_dtb(void)
 
 	int len;
 	const char *np;
-	int noff;
+	int noff; */
 	struct boot_img_hdr *b_hdr = (boot_img_hdr *)BOOT_BASE;
-#if defined(CONFIG_USE_AVB20)
-	struct AvbOps *ops;
-	bool unlock;
-#endif
+//#if defined(CONFIG_USE_AVB20)
+//	struct AvbOps *ops;
+//	bool unlock;
+//#endif
 
 	/* Get Secure DRAM information */
-	soc_ver = exynos_smc(SMC_CMD_GET_SOC_INFO, SOC_INFO_TYPE_VERSION, 0, 0);
+/*	soc_ver = exynos_smc(SMC_CMD_GET_SOC_INFO, SOC_INFO_TYPE_VERSION, 0, 0);
 	if (soc_ver == SOC_INFO_VERSION(SOC_INFO_MAJOR_VERSION, SOC_INFO_MINOR_VERSION)) {
 		sec_dram_base = exynos_smc(SMC_CMD_GET_SOC_INFO,
 		                           SOC_INFO_TYPE_SEC_DRAM_BASE,
@@ -303,10 +304,10 @@ static void configure_dtb(void)
 	sec_dram_end = sec_dram_base + sec_dram_size;
 
 	printf("SEC_DRAM_BASE[%#lx]\n", sec_dram_base);
-	printf("SEC_DRAM_SIZE[%#x]\n", sec_dram_size);
+	printf("SEC_DRAM_SIZE[%#x]\n", sec_dram_size); */
 
 	/* Get secure page table for DRM information */
-	sec_pt_base = exynos_smc(SMC_DRM_GET_SOC_INFO,
+/*	sec_pt_base = exynos_smc(SMC_DRM_GET_SOC_INFO,
 	                         SOC_INFO_SEC_PGTBL_BASE,
 	                         0,
 	                         0);
@@ -345,10 +346,10 @@ static void configure_dtb(void)
 	sec_pt_end = sec_pt_base + sec_pt_size;
 
 	printf("SEC_PGTBL_BASE[%#lx]\n", sec_pt_base);
-	printf("SEC_PGTBL_SIZE[%#x]\n", sec_pt_size);
+	printf("SEC_PGTBL_SIZE[%#x]\n", sec_pt_size); */
 
 	/* Get H-Arx base address and size to carve-out */
-	if (is_harx_initialized == false)
+/*	if (is_harx_initialized == false)
 		goto skip_carve_out_harx;
 
 	if (soc_rev < SOC_REVISION_EVT1)
@@ -385,7 +386,7 @@ static void configure_dtb(void)
 		harx_size = 0;
 	}
 
-skip_carve_out_harx:
+skip_carve_out_harx: */
 
 	/* DT control code must write after this function call. */
 	merge_dto_to_main_dtb(board_id, board_rev);
@@ -395,37 +396,37 @@ skip_carve_out_harx:
 	exynos_usb_cci_control(0);
 
 
-	if (readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_RECOVERY) {
+//	if (readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_RECOVERY) {
 		sprintf(str, "<0x%x>", RAMDISK_BASE);
 		set_fdt_val("/chosen", "linux,initrd-start", str);
 
 		sprintf(str, "<0x%x>", RAMDISK_BASE + b_hdr->ramdisk_size);
 		set_fdt_val("/chosen", "linux,initrd-end", str);
-	} else if (readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_FACTORY) {
+/*	} else if (readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_FACTORY) {
 		noff = fdt_path_offset (fdt_dtb, "/chosen");
 		np = fdt_getprop(fdt_dtb, noff, "bootargs", &len);
 		snprintf(str, BUFFER_SIZE, "%s %s", np, "androidboot.mode=factory");
 		fdt_setprop(fdt_dtb, noff, "bootargs", str, strlen(str) + 1);
 		printf("Enter factory mode...");
-	}
+	} */
 
 	/* Secure memories are carved-out in case of EVT1 */
 	/*
 	 * 1st DRAM node
 	 */
-	add_dt_memory_node(DRAM_BASE,
-	                   sec_dram_base - DRAM_BASE);
+//	add_dt_memory_node(DRAM_BASE,
+//	                   sec_dram_base - DRAM_BASE);
 	/*
 	 * 2nd DRAM node
 	 */
-	if ((harx_base != 0) && (harx_size != 0)) {
-		add_dt_memory_node(sec_dram_end,
-				   harx_base - sec_dram_end);
+//	if ((harx_base != 0) && (harx_size != 0)) {
+//		add_dt_memory_node(sec_dram_end,
+//				   harx_base - sec_dram_end);
 
-		sec_dram_end = harx_base + harx_size;
-	}
+//		sec_dram_end = harx_base + harx_size;
+//	}
 
-	if (sec_pt_base && sec_pt_size) {
+/*	if (sec_pt_base && sec_pt_size) {
 		add_dt_memory_node(sec_dram_end,
 		                   sec_pt_base - sec_dram_end);
 
@@ -448,54 +449,54 @@ skip_carve_out_harx:
 			                   (DRAM_BASE + dram_size)
 			                   - sec_dram_end);
 		}
-	}
+	} */
 
 	/*
 	 * 3rd DRAM node
 	 */
-	if (dram_size <= SIZE_2GB)
-		goto mem_node_out;
+//	if (dram_size <= SIZE_2GB)
+//		goto mem_node_out;
 
-	for (u64 i = 0; i < dram_size - SIZE_2GB; i += SIZE_500MB) {
+//	for (u64 i = 0; i < dram_size - SIZE_2GB; i += SIZE_500MB) {
 		/* HACK: unaccessible range(B_0000_0000 ~ B_FFFF_FFFF)*/
-		u64 ua_size;
+/*		u64 ua_size;
 		if (((DRAM_BASE2 + i) >> 32) >= 0xb)
 			ua_size = SIZE_4GB;
 		else
-			ua_size = 0;
+			ua_size = 0; */
 
 		/* add 500MB mem node */
-		add_dt_memory_node(DRAM_BASE2 + i + ua_size, SIZE_500MB);
-	}
+	//	add_dt_memory_node(DRAM_BASE2 + i + ua_size, SIZE_500MB);
+	//}
 
-	set_bootargs();
-mem_node_out:
+	//set_bootargs();
+//mem_node_out:
 
-	sprintf(str, "<0x%x>", RAMDISK_BASE);
-	set_fdt_val("/chosen", "linux,initrd-start", str);
+//	sprintf(str, "<0x%x>", RAMDISK_BASE);
+//	set_fdt_val("/chosen", "linux,initrd-start", str);
 
-	sprintf(str, "<0x%x>", RAMDISK_BASE + b_hdr->ramdisk_size);
-	set_fdt_val("/chosen", "linux,initrd-end", str);
+//	sprintf(str, "<0x%x>", RAMDISK_BASE + b_hdr->ramdisk_size);
+//	set_fdt_val("/chosen", "linux,initrd-end", str);
 
-	if (b_hdr->cmdline[0] && (!b_hdr->cmdline[BOOT_ARGS_SIZE - 1])) {
+/*	if (b_hdr->cmdline[0] && (!b_hdr->cmdline[BOOT_ARGS_SIZE - 1])) {
 		noff = fdt_path_offset(fdt_dtb, "/chosen");
 		np = fdt_getprop(fdt_dtb, noff, "bootargs", &len);
 		snprintf(str, BUFFER_SIZE, "%s %s", np, b_hdr->cmdline);
 		fdt_setprop(fdt_dtb, noff, "bootargs", str, strlen(str) + 1);
-	}
+	} */
 
 #if defined(CONFIG_USE_AVB20)
 	/* set AVB args */
-	get_ops_addr(&ops);
+	/*get_ops_addr(&ops);
 	ops->read_is_device_unlocked(ops, &unlock);
 	noff = fdt_path_offset (fdt_dtb, "/chosen");
 	np = fdt_getprop(fdt_dtb, noff, "bootargs", &len);
 	snprintf(str, BUFFER_SIZE, "%s %s %s", np, cmdline, verifiedbootstate);
-	fdt_setprop(fdt_dtb, noff, "bootargs", str, strlen(str) + 1);
+	fdt_setprop(fdt_dtb, noff, "bootargs", str, strlen(str) + 1);*/
 #endif
-	if (readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_RECOVERY) {
+	//if (readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_RECOVERY) {
 		/* Set bootargs for recovery mode */
-		remove_string_from_bootargs("skip_initramfs ");
+	/*	remove_string_from_bootargs("skip_initramfs ");
 		remove_string_from_bootargs("ro init=/init ");
 
 		noff = fdt_path_offset (fdt_dtb, "/chosen");
@@ -513,7 +514,7 @@ mem_node_out:
 	if (change_dt_psci_method(fdt_dtb))
 		printf("Do not change PSCI method\n");
 	else
-		harx_print_with_lcd("Change PSCI method to HVC\n");
+		harx_print_with_lcd("Change PSCI method to HVC\n");*/
 
 	resize_dt(0);
 }
@@ -599,6 +600,8 @@ int cmd_boot(int argc, const cmd_args *argv)
 	configure_dtb();
 	configure_ddi_id();
 
+        //resize_dt(0);
+
 	printf("scsi_do_ssu\n");
 	/*
 	 * PON (Power off notification) to storage
@@ -610,6 +613,10 @@ int cmd_boot(int argc, const cmd_args *argv)
 	/* power off sd slot before starting kernel */
 	printf("mmc_power_off\n");
 	mmc_power_set(2, 0);
+
+	printf("Disabing DECON HW_SW_TRIG\n");
+	*(int*)(0x19050000 + 0x70) = 0x3070;
+	print_lcd_update(FONT_BLACK, FONT_RED, "IF YOU SEE THIS, DECON IS NOT DISABLED, YOUR KERNEL WILL NOT BOOT!");
 
 	if (readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_RECOVERY ||
 	    readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_FACTORY)
