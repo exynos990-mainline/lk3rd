@@ -55,11 +55,26 @@ int merge_dto_to_main_dtb(unsigned int board_id, unsigned int board_rev)
 	dt_entry = (struct dt_table_entry *)((unsigned long)dtbo_table
 	                                     + fdt32_to_cpu(dtbo_table->header_size));
 
+
 	for (i = 0; i < fdt32_to_cpu(dtbo_table->dt_entry_count); i++, dt_entry++) {
+                print_lcd_update(FONT_RED, FONT_BLACK, "RUN %i", i);
+                print_lcd_update(FONT_RED, FONT_BLACK, "WHAT IS THIS? (0): 0x%x\n", dt_entry->custom[0]);
+                print_lcd_update(FONT_RED, FONT_BLACK, "WHAT IS THIS? (1): 0x%x\n", dt_entry->custom[1]);
+                print_lcd_update(FONT_RED, FONT_BLACK, "WHAT IS THIS? (2): 0x%x\n", dt_entry->custom[2]);
+                print_lcd_update(FONT_RED, FONT_BLACK, "WHAT IS THIS? (3): 0x%x\n", dt_entry->custom[3]);
+                if(fdt32_to_cpu(dt_entry->custom[0]) <= 21 && fdt32_to_cpu(dt_entry->custom[0]) >= 21)
+                {
+                        print_lcd_update(FONT_GREEN, FONT_BLACK, "FOUND!");
+                        //while(1){}
+                }
+
 		u32 id = fdt32_to_cpu(dt_entry->id);
 		u32 rev = fdt32_to_cpu(dt_entry->rev);
 
-		if ((id == board_id) && (rev == board_rev)) {
+		//if ((id == board_id) && (rev == board_rev)) {
+		if(fdt32_to_cpu(dt_entry->custom[0]) <= 21 && fdt32_to_cpu(dt_entry->custom[0]) >= 21) {
+                        print_lcd_update(FONT_GREEN, FONT_BLACK,
+                               "DTBO: Selected via custom0, custom1 range: %d-%d", fdt32_to_cpu(dt_entry->custom[0]), fdt32_to_cpu(dt_entry->custom[1]));
 			dtbo_idx = i;
 			printf("DTBO: id: 0x%x, rev: 0x%x, dtbo_idx: %d\n", id, rev, dtbo_idx);
 			print_lcd_update(FONT_YELLOW, FONT_BLACK,
@@ -69,6 +84,7 @@ int merge_dto_to_main_dtb(unsigned int board_id, unsigned int board_rev)
 	}
 
 	if (i == fdt32_to_cpu(dtbo_table->dt_entry_count)) {
+		print_lcd_update(FONT_RED, FONT_BLACK, "WHAT IS THIS?: 0x%x\n", fdt32_to_cpu(dtbo_table->dt_entry_count));
 		printf("DTBO: Not found dtbo of board_rev 0x%x.\n", board_rev);
 		print_lcd_update(FONT_RED, FONT_BLACK, "DTBO: Not found dtbo of board_rev 0x%x.\n", board_rev);
 		return -EINVAL;
