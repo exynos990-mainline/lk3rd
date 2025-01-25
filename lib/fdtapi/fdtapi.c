@@ -45,12 +45,12 @@ int merge_dto_to_main_dtb(unsigned int board_id, unsigned int board_rev)
 	ret = fdt_check_header(fdt_dtb);
 	if (ret < 0) {
 		printf("DTBO: fdt_check_header(): %s\n", fdt_strerror(ret));
-		return -EINVAL;
+	//	return -EINVAL;
 	}
 
 	if (fdt32_to_cpu(dtbo_table->magic) != DT_TABLE_MAGIC) {
 		printf("DTBO: dtbo.img: %s\n", fdt_strerror(-FDT_ERR_BADMAGIC));
-		return -EINVAL;
+	//	return -EINVAL;
 	}
 	dt_entry = (struct dt_table_entry *)((unsigned long)dtbo_table
 	                                     + fdt32_to_cpu(dtbo_table->header_size));
@@ -87,7 +87,7 @@ int merge_dto_to_main_dtb(unsigned int board_id, unsigned int board_rev)
 		print_lcd_update(FONT_RED, FONT_BLACK, "WHAT IS THIS?: 0x%x\n", fdt32_to_cpu(dtbo_table->dt_entry_count));
 		printf("DTBO: Not found dtbo of board_rev 0x%x.\n", board_rev);
 		print_lcd_update(FONT_RED, FONT_BLACK, "DTBO: Not found dtbo of board_rev 0x%x.\n", board_rev);
-		return -EINVAL;
+	//	return -EINVAL;
 	}
 
 	fdto = malloc(fdt32_to_cpu(dt_entry->dt_size));
@@ -124,9 +124,13 @@ int merge_dto_to_main_dtb(unsigned int board_id, unsigned int board_rev)
 	} else {
 		printf("DPM: dpm dtb: does not exist.(%s)\n", fdt_strerror(ret));
 	}
+
+while(1){}
 fdto_magic_err:
 	free(fdto);
 	return -EINVAL;
+	while(1){}
+
 }
 
 int resize_dt(unsigned int sz)

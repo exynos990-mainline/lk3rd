@@ -47,7 +47,7 @@ extern void fastboot_set_payload_data(int dir, void *buf, unsigned int len);
 extern void fasboot_set_rx_sz(unsigned int prot_req_sz);
 extern void fastboot_tx_event_init(void);
 
-#define FB_RESPONSE_BUFFER_SIZE 128
+#define FB_RESPONSE_BUFFER_SIZE 16384
 #define REBOOT_MODE_RECOVERY	0xFF
 #define LOCAL_TRACE 0
 
@@ -156,7 +156,7 @@ __attribute__((weak)) void get_serialno(int *chip_id)
 }
 
 
-const char *fastboot_variables[] = 
+const char *fastboot_variables[] =
 {
 	"version",
 	"product",
@@ -202,16 +202,18 @@ enum fastboot_variable_id
 	ALL = 0xA11,
 };
 
-const char *oem_commands[] = 
+const char *oem_commands[] =
 {
 	"str_ram",
 	"reboot-download",
+	"fdt_dump",
 };
 
 enum oem_commands_id
 {
 	OEM_STR_RAM = 0,
 	OEM_REBOOT_DOWNLOAD,
+	OEM_FDT_DUMP,
 	OEM_CMD_END,
 };
 
@@ -829,14 +831,19 @@ int fb_do_oem(const char *cmd_buffer, unsigned int rx_sz)
 		else
 			sprintf(response, "FAILunsupported command");
 		break;
-	
-	case OEM_REBOOT_DOWNLOAD:
-			sprintf(response, "OKAY");
-			fastboot_send_status(response, strlen(response), FASTBOOT_TX_ASYNC);
-			platform_prepare_reboot();
-			platform_do_reboot("reboot-download");
-			break;
 
+	case OEM_REBOOT_DOWNLOAD:
+		sprintf(response, "OKAY");
+		fastboot_send_status(response, strlen(response), FASTBOOT_TX_ASYNC);
+		platform_prepare_reboot();
+		platform_do_reboot("reboot-download");
+		break;
+	case OEM_FDT_DUMP:
+        flash_using_part("boot", response,
+                        4096, (void *)(0x8A000000));
+
+		sprintf(response, "FAIL");
+		break;
 	default:
 		sprintf(response, "FAILunsupported command");
 		break;
