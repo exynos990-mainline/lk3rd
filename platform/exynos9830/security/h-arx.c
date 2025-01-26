@@ -140,7 +140,7 @@ int change_dt_psci_method(struct fdt_header *fdt_dtb)
 	int nodeoff, len, ret;
 	const char *namep;
 
-	if (is_harx_initialized == false) {
+	/*if (is_harx_initialized == false) {
 		printf("H-Arx is not initialized\n");
 		return -1;
 	}
@@ -160,7 +160,7 @@ int change_dt_psci_method(struct fdt_header *fdt_dtb)
 	if (namep == NULL) {
 		printf("fdt_getprop of PSCI method fail\n");
 		return -1;
-	}
+	}*/
 
 	if (strncmp(namep, PSCI_METHOD_SMC, len) == 0) {
 		ret = fdt_setprop_string(fdt_dtb,

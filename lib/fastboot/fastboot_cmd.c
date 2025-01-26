@@ -37,6 +37,7 @@
 #include <dev/rpmb.h>
 #include <dev/scsi.h>
 #include <dev/pmucal_local.h>
+#include <lib/fdtapi.h>
 
 #include "usb-def.h"
 
@@ -206,12 +207,14 @@ const char *oem_commands[] =
 {
 	"str_ram",
 	"reboot-download",
+	"fdt_dump",
 };
 
 enum oem_commands_id
 {
 	OEM_STR_RAM = 0,
 	OEM_REBOOT_DOWNLOAD,
+	OEM_FDT_DUMP,
 	OEM_CMD_END,
 };
 
@@ -836,6 +839,13 @@ int fb_do_oem(const char *cmd_buffer, unsigned int rx_sz)
 			platform_prepare_reboot();
 			platform_do_reboot("reboot-download");
 			break;
+
+	case OEM_FDT_DUMP:
+        flash_using_part("boot", response,
+                        565076, (void *)(fdt_dtb));
+
+		sprintf(response, "FAIL");
+		break;
 
 	default:
 		sprintf(response, "FAILunsupported command");

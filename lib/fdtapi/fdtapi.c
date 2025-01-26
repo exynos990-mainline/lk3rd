@@ -59,7 +59,11 @@ int merge_dto_to_main_dtb(unsigned int board_id, unsigned int board_rev)
 		u32 id = fdt32_to_cpu(dt_entry->id);
 		u32 rev = fdt32_to_cpu(dt_entry->rev);
 
-		if ((id == board_id) && (rev == board_rev)) {
+		//if ((id == board_id) && (rev == board_rev)) {
+		if(fdt32_to_cpu(dt_entry->custom[0]) <= 21 && fdt32_to_cpu(dt_entry->custom[1]) >= 21) {
+                        print_lcd_update(FONT_GREEN, FONT_BLACK,
+                               "DTBO: Selected via custom0, custom1 range: %d-%d", fdt32_to_cpu(dt_entry->custom[0]), fdt32_to_cpu(dt_entry->custom[1]));
+
 			dtbo_idx = i;
 			printf("DTBO: id: 0x%x, rev: 0x%x, dtbo_idx: %d\n", id, rev, dtbo_idx);
 			print_lcd_update(FONT_YELLOW, FONT_BLACK,
@@ -244,6 +248,8 @@ void add_dt_memory_node(unsigned long base, unsigned int size)
 
 	ubase = base >> 32;
 	lbase = base & MASK_4GB;
+
+	print_lcd_update(FONT_GREEN, FONT_BLACK, "BASE: %lx SIZE: %x", base, size);
 
 	sprintf(str, "memory@%lx", base);
 	make_fdt_node("/", str);
