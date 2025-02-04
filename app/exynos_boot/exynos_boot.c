@@ -16,7 +16,6 @@
 #include <lib/fastboot.h>
 #include <lib/font_display.h>
 #include <platform/sfr.h>
-#include <platform/charger.h>
 #include <platform/gpio.h>
 #include <platform/smc.h>
 #include <platform/chip_rev.h>
@@ -52,9 +51,12 @@ static void print_fastboot_reason(void)
 	}
 }
 
+int create_fastboot_menu_thread(void);
+#define mdelay(x) u_delay((x) * (1000))
+
 static void exynos_boot_task(const struct app_descriptor *app, void *args)
 {
-	struct exynos_gpio_bank *bank = (struct exynos_gpio_bank *)EXYNOS9830_GPA0CON;
+	struct exynos_gpio_bank *bank = (struct exynos_gpio_bank *)EXYNOS_GPA0CON;
 	int gpio = 4;	/* Volume down */
 	int val;
 
@@ -64,18 +66,9 @@ static void exynos_boot_task(const struct app_descriptor *app, void *args)
 	mdelay(50);
 	val = exynos_gpio_get_value(bank, gpio);
 
-	if(readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_LK3RD_FAIL)
+	if(0)
 	{
-		writel(0, EXYNOS9830_POWER_SYSIP_DAT0); // Clear reboot reason
-		enter_reason = (char *)"boot failure!";
-		start_usb_gadget();
-		return;
-	}
-
-	if(readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_LK3RD)
-	{
-		writel(0, EXYNOS9830_POWER_SYSIP_DAT0); // Clear reboot reason
-		enter_reason = (char *)"lk3rd request via PMU DAT0";
+		//writel(0, EXYNOS9830_POWER_SYSIP_DAT0); // Clear reboot reason
 		start_usb_gadget();
 		return;
 	}
@@ -86,12 +79,8 @@ static void exynos_boot_task(const struct app_descriptor *app, void *args)
 		start_usb_gadget();
 	}
 	else
-	{
-		if (lk3rd_get_mainline_quirks() == 0)
-			cmd_boot(0, 0);
-		else
-			mainline_boot();
-	}
+		printf("wtf\n");
+		//cmd_boot(0, 0);
 
 	return;
 }

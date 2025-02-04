@@ -133,6 +133,7 @@ static int bootstrap2(void *arg)
     apps_init();
 
     lk_primary_cpu_init_level(LK_INIT_LEVEL_APPS, LK_INIT_LEVEL_LAST);
+    dprintf(SPEW, "bootstrap2 DONE!!!\n");
 
     return 0;
 }

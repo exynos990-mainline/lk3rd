@@ -23,8 +23,9 @@
 #ifndef __FONT_DISPLAY_H__
 #define __FONT_DISPLAY_H__
 
-#include <target/dpu_config.h>
 #include <stdbool.h>
+//#include <target/dpu_config.h>
+#include <sys/types.h>
 
 #define FONT_BLACK		0xFF000000
 #define FONT_GRAY		0xFF808080
@@ -35,13 +36,12 @@
 #define FONT_YELLOW		0xFFFFFF00
 #define FONT_ORANGE		0xFFFFA000
 
-#ifdef CONFIG_DISPLAY_DRAWFONT
+/* Fill a frame buffer with characters */
+int fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str, u32 font_color, u32 bg_color);
+
 int print_lcd(u32 font_color, u32 bg_color, const char *fmt, ...);
 int print_lcd_update(u32 font_color, u32 bg_color, const char *fmt, ...);
-#else
-#define print_lcd(font_color, bg_color, fmt, str...) do {} while (0)
-#define print_lcd_update(font_color, bg_color, fmt, str...) do {} while (0)
-#endif
+int clear_screen(int);
 
 void draw_pixel(uint32_t x, uint32_t y, uint32_t color);
 void draw_line(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint width, uint32_t color);
