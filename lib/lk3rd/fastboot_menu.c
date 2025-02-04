@@ -120,8 +120,10 @@ void notify_action_start(void)
 
 int fastboot_menu_entry(void *arg)
 {
-	struct exynos_gpio_bank *bank_volume = (struct exynos_gpio_bank *)EXYNOS9830_GPA0CON;
-	struct exynos_gpio_bank *bank_power = (struct exynos_gpio_bank *)EXYNOS9830_GPA2CON;
+
+	struct exynos_gpio_bank *bank_volume = (struct exynos_gpio_bank *)EXYNOS_GPA0CON;
+	struct exynos_gpio_bank *bank_power = (struct exynos_gpio_bank *)EXYNOS_GPA2CON;
+
 	int volup, voldown, power, key_stuck = 0;
 
 	lk_time_t last_button_press = current_time(), default_repeat_delay = 400, repeat_delay = default_repeat_delay;
@@ -130,6 +132,7 @@ int fastboot_menu_entry(void *arg)
 	setup_keys(bank_volume, BANK_GPA0);
 	setup_keys(bank_power, BANK_GPA2);
 	clear_screen(FONT_BLACK);
+
 	draw_menu(current_action);
 
 	while (true)

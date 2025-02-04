@@ -1,7 +1,6 @@
 #!/bin/bash
 
-
-boards=("maestro9610" "universal9630" "maestro9820" "smdk9830" "universal9830_bringup" "phoenix9830" "c1s" "c2s" "r8s" "x1s" "y2s" "z3s" "erd3830" "universal3830")
+boards=("beyond2lte" "maestro9610" "universal9630" "maestro9820" "smdk9830" "universal9830_bringup" "phoenix9830" "c1s" "c2s" "r8s" "x1s" "y2s" "z3s" "erd3830" "universal3830")
 
 tarball=false
 user_mode=false
@@ -118,7 +117,7 @@ if [[ " ${boards[@]} " =~ " $board " ]]; then
 
 	mv build-$board build/$board/
 	mv boot-$board.img build/$board/lk3rd-$board.img
-	
+
 	popd > /dev/null
 elif [[ "$board" == "all" ]]; then
 	rm -rf "$(dirname "${BASH_SOURCE[0]}")/build/all/"
