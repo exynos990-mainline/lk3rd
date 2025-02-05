@@ -15,6 +15,7 @@
 #include <lib/console.h>
 #include <lib/fastboot.h>
 #include <lib/font_display.h>
+#include <platform/delay.h>
 #include <platform/sfr.h>
 #include <platform/gpio.h>
 #include <platform/smc.h>
@@ -48,9 +49,6 @@ static void print_fastboot_reason(void)
 		}
 	}
 }
-
-int create_fastboot_menu_thread(void);
-#define mdelay(x) u_delay((x) * (1000))
 
 static void exynos_boot_task(const struct app_descriptor *app, void *args)
 {
