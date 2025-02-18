@@ -47,6 +47,8 @@
 #include <ctype.h>
 #include <platform/b_rev.h>
 
+#include <lk3rd/mainline_quirks.h>
+
 #ifdef CONFIG_GET_B_REV_FROM_ADC
 #include <dev/exynos_adc.h>
 #include <target/b_rev_adc.h>
@@ -479,6 +481,7 @@ void platform_init(void)
 {
 	u32 ret = 0;
 	u32 rst_stat = readl(POWER_RST_STAT);
+	int mainline_quirks_enabled;
 
 	display_flexpmu_dbg();
 	print_acpm_version();
@@ -598,4 +601,9 @@ by_dumpgpr_out:
 	display_dvfs_info();
 
 	chg_init_max77705();
+
+	mainline_quirks_enabled = lk3rd_get_mainline_quirks();
+
+	if(mainline_quirks_enabled != 0 && mainline_quirks_enabled != 1) // Not a sane value, most likely uninitialised, so we initialise it.
+		lk3rd_switch_mainline_quirks(false);
 }
