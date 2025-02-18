@@ -44,6 +44,7 @@ flowchart LR
 - [Linaro](https://www.linaro.org/) ```Specifically the 96Boards group, thanks to them we had a base bootloader from Samsung to modify```
 - [BotchedRPR](https://github.com/BotchedRPR) ```Did loads of work, rewrote the entire PIT library so we had UFS up and got the bootloader to initially boot```
 - [ExtremeXT](https://github.com/ExtremeXT) ```Gave us info on ECT (Exynos Characteristics Table), which helped us boot android```
+- [halal-beef](https://github.com/halal-beef) ```Did initial efforts and boot attempts on the bootloader, got android booting, fixed bugs and major contributor```
 
 ## TODO
 
