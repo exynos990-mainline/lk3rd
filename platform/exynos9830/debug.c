@@ -16,8 +16,6 @@
 #include <stdint.h>
 
 #define FB_BASE ((u32 *)0xf1000000)
-#define FB_WIDTH 1440
-#define FB_HEIGHT 3200
 
 volatile u32 *fb = FB_BASE;
 
@@ -30,9 +28,6 @@ typedef unsigned char uint8_t;
 #include <stdint.h>
 #include <kernel/thread.h>
 #include "exynos_font.h"
-
-#define LCD_WIDTH 1440
-#define LCD_HEIGHT 3200
 
 // Global cursor position and color.
 static u32 cursor_x = 0;
