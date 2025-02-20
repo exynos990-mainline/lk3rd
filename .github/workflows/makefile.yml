@@ -1,4 +1,4 @@
-name: Makefile CI
+name: lk3rd CI
 
 on:
   push:
@@ -14,6 +14,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Disable man-db update
+      run: sudo rm -f /var/lib/man-db/auto-update
 
     - name: Install dependencies
       run: sudo apt install mkbootimg gcc-aarch64-linux-gnu build-essential
