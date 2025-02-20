@@ -106,6 +106,8 @@ const char *blocked_partitions[] = {
 const int blocked_count = sizeof(blocked_partitions) /
 						  sizeof(blocked_partitions[0]);
 
+extern bool block_keys;
+
 __attribute__((weak)) void platform_prepare_reboot(void)
 {
 	/* WARNING : NOT MODIFY THIS FUNCTION
@@ -554,6 +556,8 @@ int fb_do_erase(char *cmd_buffer, unsigned int rx_sz)
 	void *part;
 	int status = 1;
 
+	block_keys = true;
+
 	if (!strcmp(key, "wipe")) {
 		status = part_wipe_boot();
 	} else {
@@ -562,6 +566,7 @@ int fb_do_erase(char *cmd_buffer, unsigned int rx_sz)
 		if (!part_get_pt_type(key) && !part) {
 			sprintf(response, "FAILpartition does not exist");
 			fastboot_send_status(response, strlen(response), FASTBOOT_TX_ASYNC);
+			block_keys = false;
 			return 0;
 		}
 
@@ -569,6 +574,7 @@ int fb_do_erase(char *cmd_buffer, unsigned int rx_sz)
 		{
 			strcpy(response, "FAILPartition is blocked from being erased!");
 			fastboot_send_status(response, strlen(response), FASTBOOT_TX_ASYNC);
+			block_keys = false;
 			return 0;
 		}
 
@@ -585,6 +591,8 @@ int fb_do_erase(char *cmd_buffer, unsigned int rx_sz)
 	}
 
 	fastboot_send_status(response, strlen(response), FASTBOOT_TX_ASYNC);
+
+	block_keys = false;
 
 	return 0;
 }
@@ -652,6 +660,8 @@ int fb_do_flash(char *cmd_buffer, unsigned int rx_sz)
 	char *response = (char *)(((unsigned long)buf + 8) & ~0x07);
 	const char *dest = cmd_buffer + 6;
 
+	block_keys = true;
+
 	LTRACE_ENTRY;
 
 #if defined(CONFIG_CHECK_LOCK_STATE)
@@ -674,6 +684,7 @@ int fb_do_flash(char *cmd_buffer, unsigned int rx_sz)
 	{
 		strcpy(response, "FAILPartition is blocked from being flashed!");
 		fastboot_send_status(response, strlen(response), FASTBOOT_TX_ASYNC);
+		block_keys = false;
 		return 0;
 	}
 
@@ -726,6 +737,7 @@ int fb_do_flash(char *cmd_buffer, unsigned int rx_sz)
 			print_lcd_update(FONT_RED, FONT_BLACK, "Invalid lk3rd image! Stopping flashing process.");
 			sprintf(response, "FAILInvalid lk3rd Image");
         		fastboot_send_status(response, strlen(response), FASTBOOT_TX_ASYNC);
+			block_keys = false;
 			return -1;
 		}
 
@@ -744,6 +756,8 @@ int fb_do_flash(char *cmd_buffer, unsigned int rx_sz)
 
 		fastboot_send_status(response, strlen(response), FASTBOOT_TX_ASYNC);
 
+		block_keys = false;
+
 		LTRACE_EXIT;
 		return 0;
 	}
@@ -753,6 +767,8 @@ flash:
 			downloaded_data_size, (void *)interface.transfer_buffer);
 
 	fastboot_send_status(response, strlen(response), FASTBOOT_TX_ASYNC);
+
+	block_keys = false;
 
 	LTRACE_EXIT;
 	return 0;
