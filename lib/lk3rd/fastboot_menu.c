@@ -28,6 +28,7 @@
 #include <dev/pmic_s2mps_19_22.h>
 #endif
 
+bool block_keys = false;
 enum action current_action = ACTION_START;
 
 void notify_action_switch(int modifier)
@@ -131,6 +132,12 @@ int fastboot_menu_entry(void *arg)
 		volup = exynos_gpio_get_value(bank_volume, GPIO_VOLUP);
 		voldown = exynos_gpio_get_value(bank_volume, GPIO_VOLDOWN);
 		power = exynos_gpio_get_value(bank_power, GPIO_POWER);
+
+		if(block_keys)
+		{
+			thread_sleep(100);
+			continue;
+		}
 
 		if(!key_stuck)
 		{
