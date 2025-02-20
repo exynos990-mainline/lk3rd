@@ -68,18 +68,6 @@ $(warning OS_INFO=$(OS_INFO))
 # if we're the top level invocation, call ourselves with additional args
 _top:
 	@$(MAKE) -C $(LKMAKEROOT) -rR -f $(LKROOT)/engine.mk $(addprefix -I,$(LKINC)) $(MAKECMDGOALS)
-ifeq ($(SIGNATURE_BIN), yes)
-	@$(LKROOT)/tools/Makepad_sb40 "build-"$(MAKECMDGOALS)/lk.bin $(LK_PAD_SIZE)
-	@mv "build-"$(MAKECMDGOALS)/lk.bin "build-"$(MAKECMDGOALS)/lk.bin.tmp
-ifeq ($(OS_INFO), x86_64)
-	@echo "64 bit signer"
-	@$(CSLV_64) -infile "build-"$(MAKECMDGOALS)/lk.bin.tmp -outfile "build-"$(MAKECMDGOALS)/lk.bin -sign_type $(SB_SIGN_TYPE) -key_type $(SB_KEY_TYPE) -rb_count $(SB_RB_COUNT) -dynamic_length no
-else
-	echo "32 bit signer"
-	@$(CSLV_32) -infile "build-"$(MAKECMDGOALS)/lk.bin.tmp -outfile "build-"$(MAKECMDGOALS)/lk.bin -sign_type $(SB_SIGN_TYPE) -key_type $(SB_KEY_TYPE) -rb_count $(SB_RB_COUNT) -dynamic_length no
-endif
-	@rm "build-"$(MAKECMDGOALS)/lk.bin.tmp
-endif
 
 # If any arguments were provided, create a recipe for them that depends
 # on the _top rule (thus calling it), but otherwise do nothing.
