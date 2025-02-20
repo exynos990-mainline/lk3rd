@@ -17,3 +17,4 @@ scripts/toolpaths.local
 .settings/
 .vscode/
 *.img
+*.tar
