@@ -92,7 +92,6 @@ uint32_t avb_main(const char *suffix, char *cmdline, char *verifiedbootstate)
 		snprintf(buf, 100, "[AVB 2.0] authentication success (%s)\n", color);
 	}
 	strcat(verifiedbootstate, color);
-	printf(buf);
 	//avb_print_lcd(buf, color);
 
 	/* AVB color policy */
