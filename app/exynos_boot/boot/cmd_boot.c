@@ -443,7 +443,7 @@ skip_carve_out_harx:
 
 		set_fdt_val(path, "compatible", (char *)bootloader_reserved_regions[i].compatible);
 
-		snprintf(reg_value, sizeof(reg_value), (char *)bootloader_reserved_regions[i].reg);
+		snprintf(reg_value, sizeof(reg_value), "%s", (char *)bootloader_reserved_regions[i].reg);
 		set_fdt_val(path, "reg", reg_value);
 	}
 
