@@ -51,6 +51,6 @@ flowchart LR
 - [x] Get UFS Fully up
 - [x] Position independent code
 - [x] Booting Android
-- [ ] Implement fastboot boot (80% done, just need to figure out why fastboot boot on android doesn't work)
+- [x] Implement fastboot boot
 
 Cheers from the Exynos990-Mainline team!
