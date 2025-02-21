@@ -16,7 +16,21 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Install dependencies
-      run: apt install mkbootimg gcc-aarch64-linux-gnu build-essential
+      run: sudo apt install mkbootimg gcc-aarch64-linux-gnu g++-aarch64-linux-gnu build-essential
 
     - name: Build the project for all devices
       run: ./lk3rd-build-all.sh
+
+    - name: Upload a Build Artifact (Odin flashable tar files)
+      uses: actions/upload-artifact@v4.6.0
+      with:
+            name: lk3rd Boot Tars
+            path: "*.tar"
+            retention-days: 90
+
+    - name: Upload a Build (Boot images)
+      uses: actions/upload-artifact@v4.6.0
+      with:
+            name: lk3rd Boot Images
+            path: "*.img"
+            retention-days: 90
