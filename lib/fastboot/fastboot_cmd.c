@@ -326,14 +326,14 @@ int fb_do_getvar(char *cmd_buffer, unsigned int rx_sz)
 		case PRODUCT: {
 			tmp = fastboot_get_product_string();
 			if (tmp)
-				sprintf(response + 4, tmp);
+				sprintf(response + 4, "%s", tmp);
 			break;
 		}
 
 		case SERIALNO: {
 			tmp = fastboot_get_serialno_string();
 			if (tmp)
-				sprintf(response + 4, tmp);
+				sprintf(response + 4, "%s", tmp);
 			break;
 		}
 
@@ -455,7 +455,7 @@ int fb_do_getvar(char *cmd_buffer, unsigned int rx_sz)
 
 			hex2str(uid_buf, uid_str, 16);
 
-			sprintf(response + 4, uid_str);
+			sprintf(response + 4, "%s", uid_str);
 			break;
 		}
 
