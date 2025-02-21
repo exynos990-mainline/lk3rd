@@ -701,6 +701,28 @@ int cmd_boot(int argc, const cmd_args *argv)
 	return 0;
 }
 
+int boot_fb_continue(void)
+{
+	int ret;
+
+	stop_usb_gadget();
+
+	if (lk3rd_get_mainline_quirks() == 0) {
+		ret = cmd_boot(0, 0);
+	}
+	else {
+		ret = 0;
+		mainline_boot();
+	}
+
+	if (ret) {
+		printf("Resuming fastboot mode\n");
+		start_usb_gadget();
+	}
+
+	return ret;
+}
+
 STATIC_COMMAND_START
 	STATIC_COMMAND("boot", "start kernel booting", &cmd_boot)
 STATIC_COMMAND_END(boot);
