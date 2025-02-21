@@ -17,6 +17,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <lk/err.h>
+#include <app/exynos_boot/cmd_boot.h>
+#include <kernel/thread.h>
 #include <lib/console.h>
 #include <lib/font_display.h>
 //#include <lib/fastboot.h>
@@ -42,6 +44,14 @@
 #include <lk3rd/fastboot_menu.h>
 
 #include "usb-def.h"
+
+/*
+ * For unknown reasons, when running cmd_boot() from wait_rx_done() handler
+ * (i.e. from fastboot mode), some delay must be done before running cmd_boot().
+ * Otherwise the kernel will stuck on the early startup stage. This constant
+ * is delay time, in msec.
+ */
+#define USB_RX_MAGIC_DELAY	50
 
 extern void fastboot_send_info(char *response, unsigned int len);
 extern void fastboot_send_payload(void *buf, unsigned int len);
@@ -774,6 +784,47 @@ flash:
 	return 0;
 }
 
+int fb_do_continue(char *cmd_buffer, unsigned int rx_sz)
+{
+	char buf[FB_RESPONSE_BUFFER_SIZE];
+	char *response = (char *)(((unsigned long)buf + 8) & ~0x07);
+
+	block_keys = true;
+
+	thread_sleep(USB_RX_MAGIC_DELAY);
+
+	sprintf(response, "OKAY");
+	fastboot_send_status(response, strlen(response), FASTBOOT_TX_SYNC);
+
+	boot_fb_continue();
+
+	block_keys = false; // We shouldn't return anyways but this is for peace of mind.
+
+	return 0;
+}
+
+int fb_do_boot(char *cmd_buffer, unsigned int rx_sz)
+{
+	char buf[FB_RESPONSE_BUFFER_SIZE];
+	char *response = (char *)(((unsigned long)buf + 8) & ~0x07);
+
+	block_keys = true;
+
+	thread_sleep(USB_RX_MAGIC_DELAY);
+
+	sprintf(response, "OKAY");
+	fastboot_send_status(response, strlen(response), FASTBOOT_TX_SYNC);
+
+	if(lk3rd_get_mainline_quirks() == 0)
+		boot_fb_boot(CFG_FASTBOOT_TRANSFER_BUFFER, download_size);
+	else
+		mainline_boot_fb_boot(CFG_FASTBOOT_TRANSFER_BUFFER, download_size);
+
+	block_keys = false; // We shouldn't return anyways but this is for peace of mind.
+
+	return 0;
+}
+
 extern void fastboot_rx_datapayload(int dir, const unsigned char *addr, unsigned int len);
 
 int fb_do_reboot(char *cmd_buffer, unsigned int rx_sz)
@@ -1122,6 +1173,8 @@ int fb_do_diskdump(char *cmd_buffer, unsigned int rx_sz)
 struct cmd_fastboot cmd_list[] = {
 	{"reboot", fb_do_reboot},
 	{"flash:", fb_do_flash},
+	{"boot", fb_do_boot},
+	{"continue", fb_do_continue},
 	{"erase:", fb_do_erase},
 	{"download:", fb_do_download},
 	{"ramdump:", fb_do_ramdump},

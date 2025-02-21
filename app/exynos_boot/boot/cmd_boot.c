@@ -21,6 +21,7 @@
 #include <dev/rpmb.h>
 #include <dev/usb/gadget.h>
 #include <platform/exynos9830.h>
+#include <platform/sizes.h>
 #include <platform/smc.h>
 #include <platform/hvc.h>
 #include <platform/sfr.h>
@@ -40,6 +41,10 @@
 #include <arch/arch_ops.h>
 
 #include <kernel/thread.h>
+
+#include <lk3rd/mainline_quirks.h>
+
+#include <app/exynos_boot/cmd_boot.h>
 
 /* Memory node */
 #define SIZE_4GB		(0x100000000)
@@ -701,6 +706,149 @@ int cmd_boot(int argc, const cmd_args *argv)
 	return 0;
 }
 
+int boot_fb_continue(void)
+{
+	int ret;
+
+	stop_usb_gadget();
+
+	if (lk3rd_get_mainline_quirks() == 0) {
+		ret = cmd_boot(0, 0);
+	}
+	else {
+		ret = 0;
+		mainline_boot();
+	}
+
+	if (ret) {
+		printf("Resuming fastboot mode\n");
+		start_usb_gadget();
+	}
+
+	return ret;
+}
+
+int boot_fb_boot(unsigned long buf_addr, size_t size)
+{
+	int ret = 0;
+	struct pit_entry *ptn;
+	cmd_args argv[7];
+	struct boot_img_hdr *b_hdr;
+
+	memset((void *)BOOT_BASE, 0, SZ_64M);
+	memcpy((void *)BOOT_BASE, (void *)buf_addr, size);
+	b_hdr = (struct boot_img_hdr *)BOOT_BASE;
+
+#ifndef CONFIG_DTB_IN_BOOT
+	ptn = pit_get_part_info("dtb");
+	if (ptn == 0) {
+		printf("Partition 'dtb' does not exist\n");
+		return -1;
+	} else {
+		pit_access(ptn, PIT_OP_LOAD, (u64)DT_BASE, 0);
+	}
+#endif
+	ptn = pit_get_part_info("dtbo");
+	if (ptn == 0) {
+		printf("Partition 'dtbo' does not exist\n");
+		return -1;
+	} else {
+		pit_access(ptn, PIT_OP_LOAD, (u64)DTBO_BASE, 0);
+	}
+
+	stop_usb_gadget();
+
+	fdt_dtb = (struct fdt_header *)DT_BASE;
+	dtbo_table = (struct dt_table_header *)DTBO_BASE;
+
+
+	if (strncmp((char*)b_hdr->magic, BOOT_MAGIC, 8)) {
+		printf("Invalid image.");
+		ret = -1;
+		goto err;
+	}
+
+	/* ensure ramdisk image loaded in 0 initialized area */
+	memset((void *)RAMDISK_BASE, 0, 0x200000);
+
+	argv[1].u = BOOT_BASE;
+	argv[2].u = KERNEL_BASE;
+	argv[3].u = RAMDISK_BASE;
+	argv[4].u = DT_BASE;
+	argv[5].u = 0x0;
+	argv[6].u = 0x0;
+
+	ret = cmd_scatter_load_boot(6, argv);
+	if (ret)
+		goto err;
+
+#if defined(CONFIG_USE_AVB20)
+#if defined(CONFIG_AVB_ABUPDATE)
+	if (ab_current_slot())
+		avb_main("_b", cmdline, verifiedbootstate);
+	else
+		avb_main("_a", cmdline, verifiedbootstate);
+#else
+	avb_main("", cmdline, verifiedbootstate);
+#endif
+#endif
+
+	configure_dtb();
+	configure_ddi_id();
+
+	printf("scsi_do_ssu\n");
+	/*
+	 * PON (Power off notification) to storage
+	 *
+	 * Even with its failure, subsequential operations should be executed.
+	 */
+	scsi_do_ssu();
+
+	/* power off sd slot before starting kernel */
+	printf("mmc_power_off\n");
+	mmc_power_set(2, 0);
+
+	if (readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_RECOVERY ||
+	    readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_FACTORY)
+		writel(0, EXYNOS9830_POWER_SYSIP_DAT0);
+
+	/* notify EL3 Monitor end of bootloader */
+	exynos_smc(SMC_CMD_END_OF_BOOTLOADER, 0, 0, 0);
+
+	//print_lcd_update(FONT_GREEN, FONT_BLACK, "About to jump to kernel! Good night!");
+
+	thread_sleep(100); // Give DECON ample time to render before shutdown.
+
+	printf("DECON0: HW_SW_TRIG Restore\n");
+	writel(0x3070, 0x19050070);
+
+	/* before jumping to kernel. disble arch_timer */
+	arm_generic_timer_disable();
+
+	/* before jumping to kernel. disable interrupt */
+	arch_disable_ints();
+
+	clean_invalidate_dcache_all();
+	disable_mmu_dcache();
+
+	/* GTFO KASLR - you're making VaultKeeper sad :( */
+	writel(0, 0x80001000 + sizeof(u32));
+
+	printf("Starting kernel...\n");
+	void (*kernel_entry)(int r0, int r1, int r2, int r3);
+
+	kernel_entry = (void (*)(int, int, int, int))KERNEL_BASE;
+	kernel_entry(DT_BASE, 0, 0, 0);
+
+	return 0;
+
+err:
+	printf("Resuming fastboot mode\n");
+	start_usb_gadget();
+	return ret;
+}
+
 STATIC_COMMAND_START
 	STATIC_COMMAND("boot", "start kernel booting", &cmd_boot)
 STATIC_COMMAND_END(boot);
+
