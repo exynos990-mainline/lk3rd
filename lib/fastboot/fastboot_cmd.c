@@ -803,6 +803,28 @@ int fb_do_continue(char *cmd_buffer, unsigned int rx_sz)
 	return 0;
 }
 
+int fb_do_boot(char *cmd_buffer, unsigned int rx_sz)
+{
+	char buf[FB_RESPONSE_BUFFER_SIZE];
+	char *response = (char *)(((unsigned long)buf + 8) & ~0x07);
+
+	block_keys = true;
+
+	thread_sleep(USB_RX_MAGIC_DELAY);
+
+	sprintf(response, "OKAY");
+	fastboot_send_status(response, strlen(response), FASTBOOT_TX_SYNC);
+
+	if(lk3rd_get_mainline_quirks() == 0)
+		boot_fb_boot(CFG_FASTBOOT_TRANSFER_BUFFER, download_size);
+	else
+		mainline_boot_fb_boot(CFG_FASTBOOT_TRANSFER_BUFFER, download_size);
+
+	block_keys = false; // We shouldn't return anyways but this is for peace of mind.
+
+	return 0;
+}
+
 extern void fastboot_rx_datapayload(int dir, const unsigned char *addr, unsigned int len);
 
 int fb_do_reboot(char *cmd_buffer, unsigned int rx_sz)
@@ -1151,6 +1173,7 @@ int fb_do_diskdump(char *cmd_buffer, unsigned int rx_sz)
 struct cmd_fastboot cmd_list[] = {
 	{"reboot", fb_do_reboot},
 	{"flash:", fb_do_flash},
+	{"boot", fb_do_boot},
 	{"continue", fb_do_continue},
 	{"erase:", fb_do_erase},
 	{"download:", fb_do_download},

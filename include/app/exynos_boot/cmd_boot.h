@@ -11,4 +11,8 @@
 #ifndef __CMD_BOOT_H__
 #define __CMD_BOOT_H__
 int boot_fb_continue(void);
+int boot_fb_boot(unsigned long buf_addr, size_t size);
+
+void mainline_boot(void);
+void mainline_boot_fb_boot(unsigned long buf_addr, size_t size);
 #endif // __CMD_BOOT_H__
