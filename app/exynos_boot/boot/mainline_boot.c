@@ -17,6 +17,7 @@
 #include <platform/smc.h>
 #include <libfdt.h>
 #include <dev/usb/gadget.h>
+#include <platform/mmu/mmu_func.h>
 
 /* Hacky. */
 void arm_generic_timer_disable(void);
@@ -65,6 +66,9 @@ void mainline_boot(void)
 	/* before jumping to kernel. disble arch_timer */
 	arm_generic_timer_disable();
 
+	clean_invalidate_dcache_all();
+	disable_mmu_dcache();
+
 	void (*kernel_entry)(int r0, int r1, int r2, int r3);
 	kernel_entry = (void (*)(int, int, int, int))KERNEL_BASE;
 	kernel_entry(DT_BASE, 0, 0, 0);
@@ -112,6 +116,9 @@ void mainline_boot_fb_boot(unsigned long buf_addr, size_t size)
 
         /* before jumping to kernel. disble arch_timer */
         arm_generic_timer_disable();
+
+	clean_invalidate_dcache_all();
+	disable_mmu_dcache();
 
         void (*kernel_entry)(int r0, int r1, int r2, int r3);
         kernel_entry = (void (*)(int, int, int, int))KERNEL_BASE;
