@@ -18,10 +18,23 @@
 #include <libfdt.h>
 #include <dev/usb/gadget.h>
 #include <platform/mmu/mmu_func.h>
+#include <lib/font_display.h>
 
 /* Hacky. */
 void arm_generic_timer_disable(void);
 int cmd_scatter_load_boot(int argc, const cmd_args *argv);
+
+void print_mainline_warning(void)
+{
+	/* Offset for the camera holepunch */
+	for (int i = 0; i < 3; i++)
+		print_lcd_update(FONT_RED, FONT_BLACK, "");
+
+	print_lcd_update(FONT_RED,    FONT_BLACK, "You are using mainline quirks.");
+	print_lcd_update(FONT_RED,    FONT_BLACK, "These quirks should not be used for booting Android.");
+	print_lcd_update(FONT_RED,    FONT_BLACK, "If you are booting Android, please reboot to fastboot and run");
+	print_lcd_update(FONT_YELLOW, FONT_BLACK, "fastboot oem disable-mainline-quirks");
+}
 
 void mainline_boot(void)
 {
@@ -29,6 +42,8 @@ void mainline_boot(void)
 	struct pit_entry *ptn;
 	cmd_args argv[6];
 	boot_img_hdr *boot_image = (boot_img_hdr *)BOOT_BASE;
+
+	print_mainline_warning();
 
 	ptn = pit_get_part_info("boot");
 	if (ptn == 0) {
@@ -82,6 +97,8 @@ void mainline_boot_fb_boot(unsigned long buf_addr, size_t size)
 	struct boot_img_hdr *b_hdr;
 	cmd_args argv[6];
 	int ret = 0;
+
+	print_mainline_warning();
 
 	memset((void *)BOOT_BASE, 0, SZ_64M);
 	memcpy((void *)BOOT_BASE, (void *)buf_addr, size);
