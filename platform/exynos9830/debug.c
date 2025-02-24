@@ -30,11 +30,6 @@ typedef unsigned char uint8_t;
 #include <stdint.h>
 #include "../../lib/font/exynos_font.h"
 
-// Global cursor position and color.
-static u32 cursor_x = 0;
-static u32 cursor_y = 0;
-static u32 text_color = 0xFFFFFF; // Default white color.
-
 // Helper function to draw a character.
 void putc_fb(u32 x, u32 y, char c, u32 color)
 {
