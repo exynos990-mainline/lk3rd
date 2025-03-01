@@ -436,7 +436,8 @@ void platform_early_init(void)
 	set_first_boot_device_info();
 
 	uart_console_init();
-	printf("LK build date: %s, time: %s\n", __DATE__, __TIME__);
+	printf("lk3rd built on %s, at %s\n", __DATE__, __TIME__);
+	printf("Welcome to lk3rd!\n");
 	dss_boot_cnt();
 
 	arm_gic_init();
@@ -521,7 +522,7 @@ void platform_init(void)
 #ifndef CONFIG_SKIP_MMC_INIT
 	mmc_init(MMC_CHANNEL_SD);
 #else
-	printf("Device does not have an SD card slot! Skip SD init");
+	printf("Device does not have an SD card slot! Skip SD init\n");
 #endif
 	part_init();
 
