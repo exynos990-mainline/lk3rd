@@ -94,10 +94,10 @@ void uart_char_out(char cData);
 
 void platform_dputc(char c)
 {
-	#ifdef PRINT_DEBUG
+#ifdef PRINT_DEBUG
 	putc_fb(c);
-	#endif
     uart_char_out(c);
+#endif
 }
 
 int platform_dgetc(char *c, bool wait)
