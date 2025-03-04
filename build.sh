@@ -1,68 +1,96 @@
 #!/bin/bash
 
-case $1 in
-	maestro9610)
-		rm -rf build-$1; make $1 $2 -j16
-		;;
-	universal9630)
-		rm -rf build-$1; make $1 $2 -j16
-		;;
-	maestro9820)
-		rm -rf build-$1; make $1 $2 -j16
-		;;
-	smdk9830)
-		rm -rf build-$1; make $1 $2 -j16
-		;;
-	universal9830_bringup)
-		rm -rf build-$1; make $1 -j16
-		;;
-	phoenix9830)
-		rm -rf build-$1; make $1 -j16
-		;;
-        c1s)
-                rm -rf build-$1; make $1 -j16
-                ;;
-        c2s)
-                rm -rf build-$1; make $1 -j16
-                ;;
-        r8s)
-                rm -rf build-$1; make $1 -j16
-                ;;
-        x1s)
-                rm -rf build-$1; make $1 -j16
-                ;;
-        y2s)
-                rm -rf build-$1; make $1 -j16
-                ;;
-	z3s)
-		rm -rf build-$1; make $1 -j13
-		;;
-	erd3830)
-		rm -rf build-$1; make $1 -j16
-		;;
-	universal3830)
-		rm -rf build-$1; make $1 -j16
-		;;
-	*)
-		echo "-----------------------------------------------------------------"
-		echo % usage : ./build.sh [board name] [none / user]
-		echo % user mode is not entering ramdump mode when problem happened.
-		echo % board list
-		echo maestro9610
-		echo universal9630
-		echo maestro9820
-		echo smdk9830
-		echo universal9830_bringup
-		echo phoenix9830
-		echo erd3830
-		echo universal3830
-		echo c1s
-		echo c2s
-		echo r8s
-		echo x1s
-		echo y2s
-		echo z3s
-		echo "-----------------------------------------------------------------"
-		exit 0
-		;;
-esac
+boards=("maestro9610" "universal9630" "maestro9820" "smdk9830" "universal9830_bringup" "phoenix9830" "c1s" "c2s" "r8s" "x1s" "y2s" "z3s" "erd3830" "universal3830")
+
+user_mode=false
+debug_mode=0
+board=""
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		-u|--user)
+			user_mode=true
+			shift
+			;;
+		-d|--debug)
+			case "$2" in
+				y) debug_mode=1 ;;
+				n) debug_mode=-1 ;;
+				*) echo "Invalid parameter for --debug. Use 'y' or 'n'."; exit 1 ;;
+			esac
+			shift 2
+			;;
+		*)
+			if [[ -n "$board" ]]; then
+				board="Board name is already set."
+			else
+				board="$1"
+			fi
+			shift
+			;;
+	esac
+done
+
+echo -e "\n-----------------------------------------------------------------"
+echo "Board: $board"
+echo "User mode: $user_mode"
+echo "Debug mode: $debug_mode"
+echo "-----------------------------------------------------------------"
+
+if [[ " ${boards[@]} " =~ " $board " ]]; then
+	pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null
+	rm -rf build-$board
+	make_cmd="make $board"
+	[[ $user_mode == true ]] && make_cmd+=" user"
+	make_cmd+=" -j16"
+
+	if [[ $debug_mode -eq -1 ]]; then
+		$make_cmd > >(while IFS= read -r line; do printf '\r%*s\r%s' "$(tput cols)" '' "$line"; done) 2>&1 || exit 1
+	else
+		$make_cmd
+	fi
+	popd > /dev/null
+elif [[ "$board" == "all" ]]; then
+	for b in "${boards[@]}"; do
+		if [[ ${#b} -eq 3 ]]; then
+			args=()
+			args+=("$b")
+			[[ $user_mode == true ]] && args+=("-u")
+			args+=("-d")
+			debug_flag="y"
+			[[ $debug_mode -le 0 ]] && debug_flag="n"
+			args+=("$debug_flag")
+			"${BASH_SOURCE[0]}" ${args[@]} || exit 1
+		fi
+	done
+else
+	echo "-----------------------------------------------------------------"
+	echo "Usage: ./build.sh [board name] [flags]"
+	echo "       ./build.sh all [flags]"
+	echo ""
+	echo "Flags:"
+	echo " -u -user            user mode does not enter ramdump mode when a problem occurs."
+	echo " -d -debug [y/N]     show make output."
+	echo ""
+	echo "Available boards:"
+	for board in "${boards[@]}"; do
+		printf "  %-22s" "$board"
+		if [[ $((++count % 3)) -eq 0 ]]; then
+			echo ""
+		fi
+	done
+	echo ""
+	echo ""
+	echo "./build.sh all builds:"
+	count=0
+	for board in "${boards[@]}"; do
+		if [[ ${#board} -eq 3 ]]; then
+			printf "  %-4s" "$board"
+			if [[ $((++count % 3)) -eq 0 ]]; then
+				echo ""
+			fi
+		fi
+	done
+	echo "-----------------------------------------------------------------"
+	exit 0
+fi
