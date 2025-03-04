@@ -3,7 +3,8 @@
 boards=("maestro9610" "universal9630" "maestro9820" "smdk9830" "universal9830_bringup" "phoenix9830" "c1s" "c2s" "r8s" "x1s" "y2s" "z3s" "erd3830" "universal3830")
 
 user_mode=false
-debug_mode=0
+debug_mode=false
+verbose_mode=0
 board=""
 
 while [[ $# -gt 0 ]]; do
@@ -13,9 +14,13 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		-d|--debug)
+			debug_mode=true
+			shift
+			;;
+		-v|--verbose)
 			case "$2" in
-				y) debug_mode=1 ;;
-				n) debug_mode=-1 ;;
+				y) verbose_mode=1 ;;
+				n) verbose_mode=-1 ;;
 				*) echo "Invalid parameter for --debug. Use 'y' or 'n'."; exit 1 ;;
 			esac
 			shift 2
@@ -31,20 +36,23 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
-echo -e "\n-----------------------------------------------------------------"
-echo "Board: $board"
-echo "User mode: $user_mode"
-echo "Debug mode: $debug_mode"
-echo "-----------------------------------------------------------------"
 
 if [[ " ${boards[@]} " =~ " $board " ]]; then
+	echo -e "\n-----------------------------------------------------------------"
+	echo "Board: $board"
+	echo "User mode: $user_mode"
+	echo "Debug mode: $verbose_mode"
+	echo "-----------------------------------------------------------------"
+
 	pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null
 	rm -rf build-$board
 	make_cmd="make $board"
 	[[ $user_mode == true ]] && make_cmd+=" user"
+	[[ $debug_mode == true ]] && make_cmd+=" print_debug"
 	make_cmd+=" -j16"
+	echo "Running: $make_cmd"
 
-	if [[ $debug_mode -eq -1 ]]; then
+	if [[ $verbose_mode -eq -1 ]]; then
 		$make_cmd > >(while IFS= read -r line; do printf '\r%*s\r%s' "$(tput cols)" '' "$line"; done) 2>&1 || exit 1
 	else
 		$make_cmd
@@ -56,9 +64,10 @@ elif [[ "$board" == "all" ]]; then
 			args=()
 			args+=("$b")
 			[[ $user_mode == true ]] && args+=("-u")
-			args+=("-d")
+			[[ $debug_mode == true ]] && args+=("-d")
+			args+=("-v")
 			debug_flag="y"
-			[[ $debug_mode -le 0 ]] && debug_flag="n"
+			[[ $verbose_mode -le 0 ]] && debug_flag="n"
 			args+=("$debug_flag")
 			"${BASH_SOURCE[0]}" ${args[@]} || exit 1
 		fi
@@ -70,7 +79,8 @@ else
 	echo ""
 	echo "Flags:"
 	echo " -u -user            user mode does not enter ramdump mode when a problem occurs."
-	echo " -d -debug [y/N]     show make output."
+	echo " -d -debug           debug mode."
+	echo " -v -verbose [y/N]   show make output."
 	echo ""
 	echo "Available boards:"
 	for board in "${boards[@]}"; do
