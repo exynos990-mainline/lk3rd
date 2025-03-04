@@ -188,6 +188,11 @@ endif
 ifeq ($(USER), user)
 GLOBAL_DEFINES += RAMDUMP_MODE_OFF
 endif
+
+ifeq ($(PRINT_DEBUG), 1)
+GLOBAL_DEFINES += PRINT_DEBUG
+endif
+
 # allow additional defines from outside the build system
 ifneq ($(EXTERNAL_DEFINES),)
 GLOBAL_DEFINES += $(EXTERNAL_DEFINES)

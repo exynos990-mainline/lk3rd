@@ -29,6 +29,14 @@ else
 USER := eng
 endif
 
+ifeq ($(findstring print_debug, $(MAKECMDGOALS)), print_debug)
+PRINT_DEBUG := 1
+TEMP := $(filter-out print_debug, $(MAKECMDGOALS))
+MAKECMDGOALS = $(TEMP)
+else
+PRINT_DEBUG := 0
+endif
+
 ifeq ($(MAKECMDGOALS), maestro9820)
 LK_PAD_SIZE := 1048576
 SB_SIGN_TYPE := 3
@@ -62,6 +70,7 @@ export BUILDROOT
 export DEFAULT_PROJECT
 export TOOLCHAIN_PREFIX
 export USER
+export PRINT_DEBUG
 
 $(warning OS_INFO=$(OS_INFO))
 # veneer makefile that calls into the engine with lk as the build root
@@ -78,4 +87,6 @@ $(MAKECMDGOALS): _top
 
 user:
 	@echo This is user build!
-.PHONY: _top user
+print_debug:
+	@echo This is print_debug build!
+.PHONY: _top user print_debug
