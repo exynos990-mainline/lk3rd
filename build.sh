@@ -3,7 +3,7 @@
 boards=("maestro9610" "universal9630" "maestro9820" "smdk9830" "universal9830_bringup" "phoenix9830" "c1s" "c2s" "r8s" "x1s" "y2s" "z3s" "erd3830" "universal3830")
 
 user_mode=false
-debug_mode=false
+enable_logging=false
 verbose_mode=0
 board=""
 
@@ -13,15 +13,15 @@ while [[ $# -gt 0 ]]; do
 			user_mode=true
 			shift
 			;;
-		-d|--debug)
-			debug_mode=true
+		-l|--log)
+			enable_logging=true
 			shift
 			;;
 		-v|--verbose)
 			case "$2" in
 				y) verbose_mode=1 ;;
 				n) verbose_mode=-1 ;;
-				*) echo "Invalid parameter for --debug. Use 'y' or 'n'."; exit 1 ;;
+				*) echo "Invalid parameter for --verbose. Use 'y' or 'n'."; exit 1 ;;
 			esac
 			shift 2
 			;;
@@ -48,7 +48,7 @@ if [[ " ${boards[@]} " =~ " $board " ]]; then
 	rm -rf build-$board
 	make_cmd="make $board"
 	[[ $user_mode == true ]] && make_cmd+=" user"
-	[[ $debug_mode == true ]] && make_cmd+=" print_debug"
+	[[ $enable_logging == true ]] && make_cmd+=" print_debug"
 	make_cmd+=" -j16"
 	echo "Running: $make_cmd"
 
@@ -64,11 +64,11 @@ elif [[ "$board" == "all" ]]; then
 			args=()
 			args+=("$b")
 			[[ $user_mode == true ]] && args+=("-u")
-			[[ $debug_mode == true ]] && args+=("-d")
+			[[ $enable_logging == true ]] && args+=("-l")
 			args+=("-v")
-			debug_flag="y"
-			[[ $verbose_mode -le 0 ]] && debug_flag="n"
-			args+=("$debug_flag")
+			verbose_flag="y"
+			[[ $verbose_mode -le 0 ]] && verbose_flag="n"
+			args+=("$verbose_flag")
 			"${BASH_SOURCE[0]}" ${args[@]} || exit 1
 		fi
 	done
@@ -79,7 +79,7 @@ else
 	echo ""
 	echo "Flags:"
 	echo " -u -user            user mode does not enter ramdump mode when a problem occurs."
-	echo " -d -debug           debug mode."
+	echo " -l --log            Enable logging."
 	echo " -v -verbose [y/N]   show make output."
 	echo ""
 	echo "Available boards:"
