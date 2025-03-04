@@ -28,4 +28,4 @@ jobs:
       run: wget https://raw.githubusercontent.com/kdrag0n/kramflash/refs/heads/master/mkbootimg.py && sudo ln -sf $(pwd)/mkbootimg.py /usr/bin/mkbootimg && chmod +x /usr/bin/mkbootimg
 
     - name: Build the project for all devices
-      run: ./lk3rd-build-all.sh
+      run: ./build.sh all -d y
