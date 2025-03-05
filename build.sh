@@ -8,7 +8,6 @@ enable_logging=false
 verbose_mode=0
 board=""
 
-
 function print_usage() {
 	echo "-----------------------------------------------------------------"
 	echo "Usage: ./build.sh [board name] [flags]"
@@ -80,7 +79,8 @@ if [[ " ${boards[@]} " =~ " $board " ]]; then
 	echo -e "\n-----------------------------------------------------------------"
 	echo "Board: $board"
 	echo "User mode: $user_mode"
-	echo "Debug mode: $verbose_mode"
+	echo "Enable logging: $enable_logging"
+	echo "Verbose mode: $([[ $verbose_mode -eq 1 ]] && echo 'true' || echo 'false')"
 	echo "-----------------------------------------------------------------"
 
 	pushd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null
@@ -96,8 +96,15 @@ if [[ " ${boards[@]} " =~ " $board " ]]; then
 	else
 		$make_cmd
 	fi
+
+	rm -rf build/$board
+	mkdir -p build/$board
+	mv build-$board build/$board/
+	mv boot-$board.img build/$board/
+	
 	popd > /dev/null
 elif [[ "$board" == "all" ]]; then
+	rm -rf "$(dirname "${BASH_SOURCE[0]}")/build/all/"
 	for b in "${boards[@]}"; do
 		if [[ ${#b} -eq 3 ]]; then
 			args=()
@@ -109,6 +116,9 @@ elif [[ "$board" == "all" ]]; then
 			[[ $verbose_mode -le 0 ]] && verbose_flag="n"
 			args+=("$verbose_flag")
 			"${BASH_SOURCE[0]}" ${args[@]} || exit 1
+
+			mkdir -p "$(dirname "${BASH_SOURCE[0]}")/build/all/"
+			ln -s "$(realpath "$(dirname "${BASH_SOURCE[0]}")/build/$b/boot-$b.img")" "$(realpath "$(dirname "${BASH_SOURCE[0]}")/build/all/boot-$b.img")"
 		fi
 	done
 else
