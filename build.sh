@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 boards=("maestro9610" "universal9630" "maestro9820" "smdk9830" "universal9830_bringup" "phoenix9830" "c1s" "c2s" "r8s" "x1s" "y2s" "z3s" "erd3830" "universal3830")
 
 user_mode=false
@@ -7,8 +8,46 @@ enable_logging=false
 verbose_mode=0
 board=""
 
+
+function print_usage() {
+	echo "-----------------------------------------------------------------"
+	echo "Usage: ./build.sh [board name] [flags]"
+	echo "       ./build.sh all [flags]"
+	echo ""
+	echo "Flags:"
+	echo " -u -user            user mode does not enter ramdump mode when a problem occurs."
+	echo " -l --log            Enable logging."
+	echo " -v -verbose [y/N]   show make output."
+	echo " -h --help           Show this help message."
+	echo ""
+	echo "Available boards:"
+	for board in "${boards[@]}"; do
+		printf "  %-22s" "$board"
+		if [[ $((++count % 3)) -eq 0 ]]; then
+			echo ""
+		fi
+	done
+	echo ""
+	echo ""
+	echo "./build.sh all builds:"
+	count=0
+	for board in "${boards[@]}"; do
+		if [[ ${#board} -eq 3 ]]; then
+			printf "  %-4s" "$board"
+			if [[ $((++count % 3)) -eq 0 ]]; then
+				echo ""
+			fi
+		fi
+	done
+	echo "-----------------------------------------------------------------"
+}
+
 while [[ $# -gt 0 ]]; do
 	case "$1" in
+		-h|--help)
+			print_usage
+			exit 0
+			;;
 		-u|--user)
 			user_mode=true
 			shift
@@ -73,34 +112,7 @@ elif [[ "$board" == "all" ]]; then
 		fi
 	done
 else
-	echo "-----------------------------------------------------------------"
-	echo "Usage: ./build.sh [board name] [flags]"
-	echo "       ./build.sh all [flags]"
-	echo ""
-	echo "Flags:"
-	echo " -u -user            user mode does not enter ramdump mode when a problem occurs."
-	echo " -l --log            Enable logging."
-	echo " -v -verbose [y/N]   show make output."
-	echo ""
-	echo "Available boards:"
-	for board in "${boards[@]}"; do
-		printf "  %-22s" "$board"
-		if [[ $((++count % 3)) -eq 0 ]]; then
-			echo ""
-		fi
-	done
-	echo ""
-	echo ""
-	echo "./build.sh all builds:"
-	count=0
-	for board in "${boards[@]}"; do
-		if [[ ${#board} -eq 3 ]]; then
-			printf "  %-4s" "$board"
-			if [[ $((++count % 3)) -eq 0 ]]; then
-				echo ""
-			fi
-		fi
-	done
-	echo "-----------------------------------------------------------------"
-	exit 0
+	echo "Invalid parameters"
+	print_usage
+	exit 1
 fi
