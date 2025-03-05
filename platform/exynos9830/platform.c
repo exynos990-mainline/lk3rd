@@ -276,7 +276,6 @@ static void read_chip_rev(void)
 	s5p_chip_rev.sub = (val >> 16) & 0xf;
 }
 
-
 static void display_rst_stat(u32 rst_stat)
 {
 	u32 temp = rst_stat & (WARM_RESET | LITTLE_WDT_RESET | BIG_WDT_RESET | PIN_RESET);
@@ -424,15 +423,13 @@ void platform_early_init(void)
 	}
 
 	// Temporary, since we do not have panel driver
-	writel(0x1281, DECON0_BASE_ADDR + HW_SW_TRIG_CONTROL);
+	//writel(0x1281, DECON0_BASE_ADDR + HW_SW_TRIG_CONTROL);
 
 	read_chip_id();
 	read_chip_rev();
 
-#ifdef CONFIG_EXYNOS_BOOTLOADER_DISPLAY
 	display_panel_init();
 	initialize_fbs();
-#endif
 	set_first_boot_device_info();
 
 	uart_console_init();
@@ -526,10 +523,15 @@ void platform_init(void)
 #endif
 	part_init();
 
+	ret = display_drv_init();
+	show_boot_logo();
+
 	dss_fdt_init();
 	dfd_get_dbgc_version();
 	if (rst_stat & (WARM_RESET | LITTLE_WDT_RESET))
 		dfd_run_post_processing();
+
+	print_lcd_update(FONT_RED,    FONT_BLACK, "You are using mainline quirks.");
 
 	dfd_display_core_stat();
 	if (*(unsigned int *)DRAM_BASE == 0xabcdef) {
