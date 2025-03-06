@@ -112,16 +112,16 @@ if [[ " ${boards[@]} " =~ " $board " ]]; then
 		lz4 -B6 --content-size boot.img boot.img.lz4
 		tar -c --format=gnu -f boot-$board.tar boot.img.lz4
 		rm -f boot.img.lz4
-		mv boot-$board.tar build/$board/boot-$board.tar
+		mv boot-$board.tar build/$board/lk3rd-$board.tar
 		mv boot.img boot-$board.img
 	fi
 
 	mv build-$board build/$board/
-	mv boot-$board.img build/$board/boot-$board.img
+	mv boot-$board.img build/$board/lk3rd-$board.img
 	
 	popd > /dev/null
 elif [[ "$board" == "all" ]]; then
-	rm -r "$(dirname "${BASH_SOURCE[0]}")/build/all/"
+	rm -rf "$(dirname "${BASH_SOURCE[0]}")/build/all/"
 	for b in "${boards[@]}"; do
 		if [[ ${#b} -eq 3 ]]; then
 			args=()
@@ -136,9 +136,9 @@ elif [[ "$board" == "all" ]]; then
 			"${BASH_SOURCE[0]}" ${args[@]} || exit 1
 
 			mkdir -p "$(dirname "${BASH_SOURCE[0]}")/build/all/"
-			ln -s "$(realpath "$(dirname "${BASH_SOURCE[0]}")/build/$b/boot-$b.img")" "$(realpath "$(dirname "${BASH_SOURCE[0]}")/build/all/boot-$b.img")"
+			ln -s "$(realpath "$(dirname "${BASH_SOURCE[0]}")/build/$b/lk3rd-$b.img")" "$(realpath "$(dirname "${BASH_SOURCE[0]}")/build/all/lk3rd-$b.img")"
 			if [[ $tarball == true ]]; then
-				ln -s "$(realpath "$(dirname "${BASH_SOURCE[0]}")/build/$b/boot-$b.tar")" "$(realpath "$(dirname "${BASH_SOURCE[0]}")/build/all/boot-$b.tar")"
+				ln -s "$(realpath "$(dirname "${BASH_SOURCE[0]}")/build/$b/lk3rd-$b.tar")" "$(realpath "$(dirname "${BASH_SOURCE[0]}")/build/all/lk3rd-$b.tar")"
 			fi
 		fi
 	done
