@@ -117,11 +117,15 @@ void notify_action_start(void)
 	return;
 }
 
+
 int fastboot_menu_entry(void *arg)
 {
 	struct exynos_gpio_bank *bank_volume = (struct exynos_gpio_bank *)EXYNOS9830_GPA0CON;
 	struct exynos_gpio_bank *bank_power = (struct exynos_gpio_bank *)EXYNOS9830_GPA2CON;
 	int volup, voldown, power, key_stuck = 0;
+
+	lk_time_t last_button_press = current_time(), default_repeat_delay = 400, repeat_delay = default_repeat_delay;
+	float repeat_delay_multiplier = .9;
 
 	setup_keys(bank_volume, BANK_GPA0);
 	setup_keys(bank_power, BANK_GPA2);
@@ -139,27 +143,39 @@ int fastboot_menu_entry(void *arg)
 			continue;
 		}
 
-		if(!key_stuck)
+		if (volup && voldown && power)
 		{
-			if (!volup)
+			repeat_delay = default_repeat_delay;
+			key_stuck = 0;
+		}
+		else if (!power)
+		{
+			notify_action_start();
+			key_stuck = 3;
+			last_button_press = current_time();
+			repeat_delay *= repeat_delay_multiplier;
+		}
+		else if(current_time() - last_button_press > repeat_delay || repeat_delay == default_repeat_delay)
+		{
+			if (!volup && (repeat_delay == default_repeat_delay || key_stuck == 1))
 			{
 				notify_action_switch(-1);
 				key_stuck = 1;
+				last_button_press = current_time();
+				repeat_delay *= repeat_delay_multiplier;
 			}
-			if (!voldown)
+			else if (!voldown && (repeat_delay == default_repeat_delay || key_stuck == 2))
 			{
 				notify_action_switch(1);
-				key_stuck = 1;
+				key_stuck = 2;
+				last_button_press = current_time();
+				repeat_delay *= repeat_delay_multiplier;
 			}
-			if (!power)
+			else
 			{
-				notify_action_start();
-				key_stuck = 1;
+				repeat_delay = default_repeat_delay;
+				key_stuck = 0;
 			}
-		}
-		if(volup && voldown && power)
-		{
-			key_stuck = 0;
 		}
 
 		// Don't freeze up lk.
