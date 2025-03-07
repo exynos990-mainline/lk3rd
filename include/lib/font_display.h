@@ -40,11 +40,12 @@ int fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str, u32 font_color, u32 bg_color
 #ifdef CONFIG_DISPLAY_DRAWFONT
 int print_lcd(u32 font_color, u32 bg_color, const char *fmt, ...);
 int print_lcd_update(u32 font_color, u32 bg_color, const char *fmt, ...);
-int clear_screen(int);
 #else
 #define print_lcd(font_color, bg_color, fmt, str...) do {} while (0)
 #define print_lcd_update(font_color, bg_color, fmt, str...) do {} while (0)
-int clear_screen(int);
 #endif
+
+int clear_screen(int);
+int clear_line(int, uint32_t);
 
 #endif /* __FONT_DISPLAY_H__ */
