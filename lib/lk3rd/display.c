@@ -74,6 +74,7 @@ void draw_menu(enum action current_action)
 {
 	clear_line(FONT_BLACK, 1); // Only clear lines that change to avoid flickering
 	draw_current_action(current_action);
+
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "");
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "Press volume key to select, and press power key to select");
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "");

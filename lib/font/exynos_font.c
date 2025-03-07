@@ -42,6 +42,9 @@ static u32 y_pos = 0;
 #define ALPHANUMERIC_OFFSET		0
 #define LENGTH_OF_A_CHAR_ARRAY		((FONT_Y) * 2)
 #define FONT_PTR_BIT			(((FONT_X) / 2) - 1)
+#ifndef LCD_OFFSET 
+#define LCD_OFFSET			0
+#endif
 
 /* Clears the framebuffer by filling it with a specified color */
 void clear_screen(uint32_t color)
@@ -49,7 +52,7 @@ void clear_screen(uint32_t color)
 	volatile u32 *_fb = (u32*)0xf1000000;
 	y_pos = 0;
 
-	for (uint32_t y = 0; y < LCD_HEIGHT; y++)
+	for (uint32_t y = LCD_OFFSET; y < LCD_HEIGHT; y++)
 	{
 		for (uint32_t x = 0; x < LCD_WIDTH; x++)
 		{
@@ -63,11 +66,11 @@ void clear_line(uint32_t color, uint32_t line_number)
 	volatile u32 *_fb = (u32*)0xf1000000;
 	y_pos = 0;
 
-	for (uint32_t y = line_number*FONT_Y; y < (line_number+1)*FONT_Y; y++)
+	for (uint32_t y = 0; y < FONT_Y; y++)
 	{
 		for (uint32_t x = 0; x < LCD_WIDTH; x++)
 		{
-			_fb[y * LCD_WIDTH + x] = color;
+			_fb[(line_number * FONT_Y + LCD_OFFSET + y) * LCD_WIDTH + x] = color;
 		}
 	}
 }
@@ -131,12 +134,6 @@ static void initialize_font_fb(void)
 static int _fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str,
 		u32 font_color, u32 bg_color, int lgth)
 {
-	u32 y_offset = 0;
-
-	#ifdef CONFIG_HAS_CURVED_DISPLAY
-		y_offset += 3*FONT_Y;
-	#endif
-
 
 	int i = 0;
 	int cnt = 0;
@@ -147,7 +144,7 @@ static int _fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str,
 	else
 		cnt = lgth;
 
-	if (y_pos > LCD_HEIGHT-y_offset) {
+	if (y_pos > LCD_HEIGHT - LCD_OFFSET) {
 		/* Rolling fb, y_pos and fb address reinit */
 		y_pos = 0;
 		fb_buf = (u32 *)CONFIG_DISPLAY_FONT_BASE_ADDRESS;
@@ -157,7 +154,7 @@ static int _fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str,
 	for (i = 0; i < cnt; i++) {
 		ch = *(str++);
 		if (fill_fb_one_char(fb_buf, x_pos + (i * FONT_X), LCD_WIDTH,
-			ch, (y_pos)+y_offset, font_color, bg_color)) {
+			ch, y_pos + LCD_OFFSET, font_color, bg_color)) {
 			printf("This(%c) character is not supported\n", ch);
 		}
 	}
