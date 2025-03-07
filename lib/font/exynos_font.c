@@ -27,9 +27,9 @@
 
 #include "exynos_font.h"
 #include <dpu/lcd_ctrl.h>
+#include <target/dpu_config.h>
 
 /*
-#include <target/dpu_config.h>
 #include <target/lcd_module.h>
 */
 
@@ -42,8 +42,6 @@ static u32 y_pos = 0;
 #define ALPHANUMERIC_OFFSET		0
 #define LENGTH_OF_A_CHAR_ARRAY		((FONT_Y) * 2)
 #define FONT_PTR_BIT			(((FONT_X) / 2) - 1)
-
-#define CONFIG_DISPLAY_FONT_BASE_ADDRESS BOOTLOADER_FB_ADDRESS
 
 /* Clears the framebuffer by filling it with a specified color */
 void clear_screen(uint32_t color)
@@ -133,6 +131,13 @@ static void initialize_font_fb(void)
 static int _fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str,
 		u32 font_color, u32 bg_color, int lgth)
 {
+	u32 y_offset = 0;
+
+	#ifdef CONFIG_HAS_CURVED_DISPLAY
+		y_offset += 3*FONT_Y;
+	#endif
+
+
 	int i = 0;
 	int cnt = 0;
 	char ch = 0;
@@ -142,7 +147,7 @@ static int _fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str,
 	else
 		cnt = lgth;
 
-	if (y_pos > LCD_HEIGHT) {
+	if (y_pos > LCD_HEIGHT-y_offset) {
 		/* Rolling fb, y_pos and fb address reinit */
 		y_pos = 0;
 		fb_buf = (u32 *)CONFIG_DISPLAY_FONT_BASE_ADDRESS;
@@ -152,7 +157,7 @@ static int _fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str,
 	for (i = 0; i < cnt; i++) {
 		ch = *(str++);
 		if (fill_fb_one_char(fb_buf, x_pos + (i * FONT_X), LCD_WIDTH,
-			ch, y_pos, font_color, bg_color)) {
+			ch, (y_pos)+y_offset, font_color, bg_color)) {
 			printf("This(%c) character is not supported\n", ch);
 		}
 	}
