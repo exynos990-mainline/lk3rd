@@ -72,23 +72,7 @@ void draw_current_action(enum action current_action)
 
 void draw_menu(enum action current_action)
 {
-	uint32_t menu_offset = 1;
-
-#if defined(CONFIG_HAS_CURVED_DISPLAY)
-	// Offset for curved displays
-	menu_offset += 3;
-#endif
-
-	clear_line(FONT_BLACK, menu_offset); // Only clear lines that change to avoid flickering
-
-#if defined(CONFIG_HAS_CURVED_DISPLAY)
-	print_lcd_update(FONT_WHITE, FONT_BLACK, "");
-	print_lcd_update(FONT_WHITE, FONT_BLACK, "");
-	print_lcd_update(FONT_WHITE, FONT_BLACK, "");
-#endif
-
-
-
+	clear_line(FONT_BLACK, 1); // Only clear lines that change to avoid flickering
 	draw_current_action(current_action);
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "");
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "Press volume key to select, and press power key to select");
