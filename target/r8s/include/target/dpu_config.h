@@ -36,8 +36,7 @@
 
 #define LCD_WIDTH				1080
 #define LCD_HEIGHT				2400
-
-#define CONFIG_HAS_CURVED_DISPLAY
+#define LCD_OFFSET				96
 
 /* =================================================== */
 /* Below configs can be used by display member only.
