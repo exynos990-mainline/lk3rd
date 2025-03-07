@@ -72,14 +72,22 @@ void draw_current_action(enum action current_action)
 
 void draw_menu(enum action current_action)
 {
-	clear_screen(FONT_BLACK);
+	uint32_t menu_offset = 1;
 
 #if defined(CONFIG_HAS_CURVED_DISPLAY)
 	// Offset for curved displays
+	menu_offset += 3;
+#endif
+
+	clear_line(FONT_BLACK, menu_offset); // Only clear lines that change to avoid flickering
+
+#if defined(CONFIG_HAS_CURVED_DISPLAY)
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "");
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "");
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "");
 #endif
+
+
 
 	draw_current_action(current_action);
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "");
@@ -91,8 +99,7 @@ void draw_menu(enum action current_action)
 	print_lcd_update(FONT_RED,   FONT_BLACK, "DEVICE STATE - unlocked");
 
 	if(lk3rd_get_mainline_quirks() == 1)
-		print_lcd_update(FONT_YELLOW, FONT_BLACK, "MAINLINE QUIRKS - enabled");
+		print_lcd_update(FONT_YELLOW, FONT_BLACK, "MAINLINE QUIRKS - enabled "); //extra space to overwrite the disabled message
 	else
-		print_lcd_update(FONT_GREEN, FONT_BLACK, "MAINLINE QUIRKS - disabled");
-
+		print_lcd_update(FONT_GREEN, FONT_BLACK,  "MAINLINE QUIRKS - disabled");
 }

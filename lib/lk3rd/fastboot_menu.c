@@ -125,6 +125,7 @@ int fastboot_menu_entry(void *arg)
 
 	setup_keys(bank_volume, BANK_GPA0);
 	setup_keys(bank_power, BANK_GPA2);
+	clear_screen(FONT_BLACK);
 	draw_menu(current_action);
 
 	while (true)

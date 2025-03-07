@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <string.h>
 #include <stdio.h> /* TODO : divide print_lcd function */
+#include <stdbool.h>
 
 #include "exynos_font.h"
 #include <dpu/lcd_ctrl.h>
@@ -51,6 +52,20 @@ void clear_screen(uint32_t color)
 	y_pos = 0;
 
 	for (uint32_t y = 0; y < LCD_HEIGHT; y++)
+	{
+		for (uint32_t x = 0; x < LCD_WIDTH; x++)
+		{
+			_fb[y * LCD_WIDTH + x] = color;
+		}
+	}
+}
+
+void clear_line(uint32_t color, uint32_t line_number)
+{
+	volatile u32 *_fb = (u32*)0xf1000000;
+	y_pos = 0;
+
+	for (uint32_t y = line_number*FONT_Y; y < (line_number+1)*FONT_Y; y++)
 	{
 		for (uint32_t x = 0; x < LCD_WIDTH; x++)
 		{
