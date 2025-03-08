@@ -77,7 +77,7 @@ void do_reboot(enum action action)
 		case ACTION_POWEROFF:
 #if WITH_DEV_POWER_PMIC_S2MPS_19_22
 			while(true) {
-				clear_screen(FONT_BLACK);
+				//clear_screen(FONT_BLACK);
 
 				if(!exynos_gpio_get_value((struct exynos_gpio_bank *)EXYNOS9830_GPA2CON, GPIO_POWER)) {
 					udelay(1000000);

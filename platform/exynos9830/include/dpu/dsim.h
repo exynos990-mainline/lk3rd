@@ -37,7 +37,6 @@
 #include <dpu/cal/dsim_cal.h>
 #include <target/dpu_io_ctrl.h>
 
-
 //#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 extern int dsim_log_level;

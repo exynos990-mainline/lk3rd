@@ -19,49 +19,25 @@
  * limitations under the License.
  */
 
-#include <lk/reg.h>
 #include <sys/types.h>
 #include <string.h>
 #include <stdio.h> /* TODO : divide print_lcd function */
 
 #include "exynos_font.h"
 #include <dpu/lcd_ctrl.h>
-
-/*
 #include <target/dpu_config.h>
 #include <target/lcd_module.h>
-*/
 
-typedef unsigned char u8;
-typedef unsigned int u32;
-
+// static u32 x_pos = 0;
 static u32 y_pos = 0;
-
-#define MAX_NUM_CHAR_PER_LINE		(LCD_WIDTH / (FONT_X + 1))
-#define ALPHANUMERIC_OFFSET		0
-#define LENGTH_OF_A_CHAR_ARRAY		((FONT_Y) * 2)
-#define FONT_PTR_BIT			(((FONT_X) / 2) - 1)
-
-#define CONFIG_DISPLAY_FONT_BASE_ADDRESS BOOTLOADER_FB_ADDRESS
-
-/* Clears the framebuffer by filling it with a specified color */
-void clear_screen(uint32_t color)
-{
-	volatile u32 *_fb = (u32*)0xf1000000;
-	y_pos = 0;
-
-	for (uint32_t y = 0; y < LCD_HEIGHT; y++)
-	{
-		for (uint32_t x = 0; x < LCD_WIDTH; x++)
-		{
-			_fb[y * LCD_WIDTH + x] = color;
-		}
-	}
-}
+#define MAX_NUM_CHAR_PER_LINE (LCD_WIDTH / (FONT_X + 1))
+#define ALPHANUMERIC_OFFSET 32
+#define LENGTH_OF_A_CHAR_ARRAY ((FONT_Y) * 2)
+#define FONT_PTR_BIT (((FONT_X) / 2) - 1)
 
 /* Fill the frame buffer one character at a time */
 static int fill_fb_one_char(u32 *fb_buf, u32 x_pos, u32 fb_width, char ascii,
-		u32 y_pos, u32 font_color, u32 bg_color)
+			    u32 y_pos, u32 font_color, u32 bg_color)
 {
 	int i, j;
 	u32 offset; /* Offset of font array, exynos_font.h */
@@ -73,16 +49,21 @@ static int fill_fb_one_char(u32 *fb_buf, u32 x_pos, u32 fb_width, char ascii,
 
 	offset = LENGTH_OF_A_CHAR_ARRAY * (ascii - ALPHANUMERIC_OFFSET);
 
-	for (i = 0; i < FONT_Y; i++) {
+	for (i = 0; i < FONT_Y; i++)
+	{
 		/* Move to fill next or start pixel of fb */
 		fb_ptr = fb_buf + ((i + y_pos) * fb_width) + x_pos;
 
 		/* Fill a first half part of a font width, 8bit */
-		for (j = 0; j < (FONT_X / 2); j++) {
-			if (font[offset] & (1 << j)) {
+		for (j = 0; j < (FONT_X / 2); j++)
+		{
+			if (font[offset] & (1 << j))
+			{
 				/* Filled area in font */
 				fb_ptr[(FONT_X / 2 - 1) - j] = font_color;
-			} else {
+			}
+			else
+			{
 				/* Unfilled area in font */
 				fb_ptr[(FONT_X / 2 - 1) - j] = bg_color;
 			}
@@ -92,11 +73,15 @@ static int fill_fb_one_char(u32 *fb_buf, u32 x_pos, u32 fb_width, char ascii,
 		/* Move to next (FONT / 2) pixel pointer of font */
 		offset++;
 		/* Fill the other half part of a font width, 8bit */
-		for (j = 0; j < (FONT_X / 2); j++) {
-			if (font[offset] & (1 << j)) {
+		for (j = 0; j < (FONT_X / 2); j++)
+		{
+			if (font[offset] & (1 << j))
+			{
 				/* Filled area in font */
 				fb_ptr[(FONT_X / 2 - 1) - j] = font_color;
-			} else {
+			}
+			else
+			{
 				/* Unfilled area in font */
 				fb_ptr[(FONT_X / 2 - 1) - j] = bg_color;
 			}
@@ -116,28 +101,32 @@ static void initialize_font_fb(void)
 
 /* Fill one line of the frame buffer with characters */
 static int _fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str,
-		u32 font_color, u32 bg_color, int lgth)
+			   u32 font_color, u32 bg_color, int lgth)
 {
 	int i = 0;
 	int cnt = 0;
 	char ch = 0;
+	struct exynos_panel_info *lcd_info = common_get_lcd_info();
 
 	if (lgth > MAX_NUM_CHAR_PER_LINE)
 		cnt = MAX_NUM_CHAR_PER_LINE;
 	else
 		cnt = lgth;
 
-	if (y_pos > LCD_HEIGHT) {
+	if (y_pos > lcd_info->yres)
+	{
 		/* Rolling fb, y_pos and fb address reinit */
 		y_pos = 0;
 		fb_buf = (u32 *)CONFIG_DISPLAY_FONT_BASE_ADDRESS;
 		initialize_font_fb();
 	}
 
-	for (i = 0; i < cnt; i++) {
+	for (i = 0; i < cnt; i++)
+	{
 		ch = *(str++);
-		if (fill_fb_one_char(fb_buf, x_pos + (i * FONT_X), LCD_WIDTH,
-			ch, y_pos, font_color, bg_color)) {
+		if (fill_fb_one_char(fb_buf, x_pos + (i * FONT_X), lcd_info->xres,
+				     ch, y_pos, font_color, bg_color))
+		{
 			printf("This(%c) character is not supported\n", ch);
 		}
 	}
@@ -154,14 +143,16 @@ int fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str, u32 font_color, u32 bg_color
 	int lgth = 0;
 
 	if (!str)
-		return 1;
+		return -EINVAL;
 	else
 		lgth = strlen((char *)str);
 
-	do {
+	do
+	{
 		lgth = _fill_fb_string(fb_buf, x_pos, str,
-					font_color, bg_color, lgth);
-		if (lgth) {
+				       font_color, bg_color, lgth);
+		if (lgth)
+		{
 			/* for updating the position of the remaining
 			 * string points after filling one line of the LCD.
 			 */
@@ -172,16 +163,17 @@ int fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str, u32 font_color, u32 bg_color
 	return 0;
 }
 
+#if defined(CONFIG_EXYNOS_BOOTLOADER_DISPLAY) && defined(CONFIG_DISPLAY_DRAWFONT)
 #define PRINT_BUF_SIZE 384
-#define TOP_MARGIN	40
-extern u32 _win_fb0 = 0xf1000000;
+#define TOP_MARGIN 40
+extern u32 win_fb0;
 extern void decon_string_update(void);
 
 int print_lcd(u32 font_color, u32 bg_color, const char *fmt, ...)
 {
 	va_list args;
 	char printbuffer[PRINT_BUF_SIZE];
-	u64 ptr = _win_fb0;
+	u64 ptr = win_fb0;
 	va_start(args, fmt);
 
 	/* For this to work, printbuffer must be larger than
@@ -191,7 +183,8 @@ int print_lcd(u32 font_color, u32 bg_color, const char *fmt, ...)
 	va_end(args);
 
 	if (fill_fb_string((u32 *)ptr, TOP_MARGIN,
-				(u8 *)printbuffer, font_color, bg_color)) {
+			   (u8 *)printbuffer, font_color, bg_color))
+	{
 		printf("failed to print on lcd\n");
 		return -1;
 	}
@@ -203,7 +196,7 @@ int print_lcd_update(u32 font_color, u32 bg_color, const char *fmt, ...)
 {
 	va_list args;
 	char printbuffer[PRINT_BUF_SIZE];
-	u64 ptr = _win_fb0;
+	u64 ptr = win_fb0;
 	va_start(args, fmt);
 
 	/* For this to work, printbuffer must be larger than
@@ -213,7 +206,8 @@ int print_lcd_update(u32 font_color, u32 bg_color, const char *fmt, ...)
 	va_end(args);
 
 	if (fill_fb_string((u32 *)ptr, TOP_MARGIN,
-				(u8 *)printbuffer, font_color, bg_color)) {
+			   (u8 *)printbuffer, font_color, bg_color))
+	{
 		printf("failed to print on lcd\n");
 		return -1;
 	}
@@ -223,3 +217,6 @@ int print_lcd_update(u32 font_color, u32 bg_color, const char *fmt, ...)
 	return 0;
 }
 
+#endif /* defined(CONFIG_EXYNOS_BOOTLOADER_DISPLAY) \
+	* && defined(CONFIG_DISPLAY_DRAWFONT)       \
+	*/

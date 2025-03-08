@@ -72,7 +72,7 @@ void draw_current_action(enum action current_action)
 
 void draw_menu(enum action current_action)
 {
-	clear_screen(FONT_BLACK);
+	//clear_screen(FONT_BLACK);
 
 #if defined(CONFIG_HAS_CURVED_DISPLAY)
 	// Offset for curved displays

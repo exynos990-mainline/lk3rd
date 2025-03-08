@@ -10,30 +10,15 @@
  * without the express written permission of Samsung Electronics.
  *
  */
-#include <platform/debug.h>
-#include <platform/uart.h>
-#include <types.h>
-#include <stdint.h>
 
-/* Clears the framebuffer by filling it with a specified color */
-void clear_screen(uint32_t color);
+#ifndef __S6E3HAB_LCD_CTRL_H__
+#define __S6E3HAB_LCD_CTRL_H__
 
-typedef unsigned int uint32_t;
-typedef unsigned char uint8_t;
+void s6e3hab_lcd_init(unsigned int id, struct exynos_panel_info *lcd);
+void s6e3hab_lcd_enable_exynos(unsigned int id);
+void s6e3hab_lcd_set_resol(unsigned int id, struct exynos_panel_info *lcd);
+void s6e3hab_lcd_disable_exynos(unsigned int id);
+int s6e3hab_lcd_gamma_ctrl(unsigned int id, unsigned int backlightlevel);
+int s6e3hab_lcd_gamma_update(int id);
 
-#include <stdint.h>
-#include <kernel/thread.h>
-#include "exynos_font.h"
-
-void platform_dputc(char c)
-{
-#ifdef PRINT_DEBUG
-	//putc_fb(c);
-	uart_char_out(c);
-#endif
-}
-
-int platform_dgetc(char *c, bool wait)
-{
-    return 0;
-}
+#endif /* __S6E3HAB_LCD_CTRL_H__ */

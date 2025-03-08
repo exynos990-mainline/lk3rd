@@ -19,7 +19,7 @@ void configure_ddi_id(void)
 {
 	char str[BUFFER_SIZE];
 
-	printf("Attached DDI id is [%#x]\n", ddi_id);
+	//printf("Attached DDI id is [%#x]\n", ddi_id);
 
 	memset(str, 0, sizeof(str));
 	sprintf(str, "<0x0>");

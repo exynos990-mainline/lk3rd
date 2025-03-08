@@ -280,11 +280,11 @@
 #define DSIM_CPRS_CTRL_NUM_OF_SLICE_GET(x)		(((x) >> 0) & 0x7)
 
 /*Slice01 size register*/
-#define DSIM_SLICE01					(0x78)
-#define DSIM_SLICE01_SIZE_OF_SLICE1(_x)			((_x) << 16)
+#define DSIM_SLICE01					(0x0078)
+#define DSIM_SLICE01_SIZE_OF_SLICE1(_x)			((_x) << 16)	/* SHD */
 #define DSIM_SLICE01_SIZE_OF_SLICE1_MASK		(0x1fff << 16)
 #define DSIM_SLICE01_SIZE_OF_SLICE1_GET(x)		(((x) >> 16) & 0x1fff)
-#define DSIM_SLICE01_SIZE_OF_SLICE0(_x)			((_x) << 0)
+#define DSIM_SLICE01_SIZE_OF_SLICE0(_x)			((_x) << 0)	/* SHD */
 #define DSIM_SLICE01_SIZE_OF_SLICE0_MASK		(0x1fff << 0)
 #define DSIM_SLICE01_SIZE_OF_SLICE0_GET(x)		(((x) >> 0) & 0x1fff)
 

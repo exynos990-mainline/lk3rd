@@ -524,7 +524,7 @@ void platform_init(void)
 	part_init();
 
 	ret = display_drv_init();
-	show_boot_logo();
+	//show_boot_logo();
 
 	dss_fdt_init();
 	dfd_get_dbgc_version();
