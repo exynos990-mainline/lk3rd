@@ -31,7 +31,7 @@
 // static u32 x_pos = 0;
 static u32 y_pos = 0;
 #define MAX_NUM_CHAR_PER_LINE (LCD_WIDTH / (FONT_X + 1))
-#define ALPHANUMERIC_OFFSET 32
+#define ALPHANUMERIC_OFFSET 0
 #define LENGTH_OF_A_CHAR_ARRAY ((FONT_Y) * 2)
 #define FONT_PTR_BIT (((FONT_X) / 2) - 1)
 
