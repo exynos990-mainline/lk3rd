@@ -60,6 +60,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <lk/trace.h>
 #include <stdarg.h>
 
 __BEGIN_CDECLS

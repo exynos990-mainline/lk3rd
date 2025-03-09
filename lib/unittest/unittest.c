@@ -8,8 +8,7 @@
 /*
  * Functions for unit tests.  See lib/unittest/include/unittest.h for usage.
  */
-#include <lib/unittest.h>
-
+#include <unittest.h>
 #include <lk/debug.h>
 #include <stdbool.h>
 #include <string.h>

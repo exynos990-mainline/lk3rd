@@ -9,11 +9,8 @@
  * All unit tests get registered here.  A call to run_all_tests() will run
  * them and provide results.
  */
-#include <lib/unittest.h>
-
+#include <unittest.h>
 #include <assert.h>
-#include <lk/console_cmd.h>
-#include <lk/err.h>
 
 static struct test_case_element *test_case_list = NULL;
 static struct test_case_element *failed_test_case_list = NULL;
@@ -73,45 +70,3 @@ bool run_all_tests(void)
 
     return all_success;
 }
-
-static int do_unittests(int argc, const console_cmd_args *argv) {
-
-    if (argc < 2) {
-usage:
-        printf("usage:\n");
-        printf("%s all          : run all unit tests\n", argv[0].str);
-        printf("%s list         : list all test cases\n", argv[0].str);
-        printf("%s <test name>  : run specific test\n", argv[0].str);
-        return -1;
-    }
-
-    if (!strcmp(argv[1].str, "all")) {
-        bool result = run_all_tests();
-        printf("UNIT TEST: run_all_tests return %u\n", result);
-    } else if (!strcmp(argv[1].str, "list")) {
-        for (struct test_case_element *current = test_case_list; current; current = current->next) {
-            puts(current->name);
-        }
-    } else {
-        // look for unit test that matches the string name
-        bool found_test = false;
-        for (struct test_case_element *current = test_case_list; current; current = current->next) {
-            if (strcmp(argv[1].str, current->name) == 0) {
-                found_test = true;
-                current->test_case();
-                break;
-            }
-        }
-
-        if (!found_test) {
-            goto usage;
-        }
-    }
-
-    return NO_ERROR;
-}
-
-STATIC_COMMAND_START
-STATIC_COMMAND("ut", "run some or all of the unit tests", do_unittests)
-STATIC_COMMAND_END(unit_tests);
-
