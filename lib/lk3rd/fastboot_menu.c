@@ -23,6 +23,7 @@
 #include "include/lk3rd/keys.h"
 #include "include/lk3rd/fastboot_menu.h"
 #include "include/lk3rd/display.h"
+#include "include/lk3rd/theme.h"
 
 #if WITH_DEV_POWER_PMIC_S2MPS_19_22
 #include <dev/pmic_s2mps_19_22.h>
@@ -54,26 +55,6 @@ void do_reboot(enum action action)
 {
 	switch(action)
 	{
-		case ACTION_START:
-			platform_prepare_reboot();
-			platform_do_reboot("");
-			break;
-		case ACTION_REBOOT_BOOTLOADER:
-			platform_prepare_reboot();
-			platform_do_reboot("reboot-bootloader");
-			break;
-		case ACTION_REBOOT_RECOVERY:
-			platform_prepare_reboot();
-			platform_do_reboot("reboot-recovery");
-			break;
-		case ACTION_REBOOT_FASTBOOTD:
-			platform_prepare_reboot();
-			platform_do_reboot("reboot-fastboot");
-			break;
-		case ACTION_REBOOT_DOWNLOAD:
-			platform_prepare_reboot();
-			platform_do_reboot("reboot-download");
-			break;
 		case ACTION_POWEROFF:
 #if WITH_DEV_POWER_PMIC_S2MPS_19_22
 			while(true) {
@@ -103,6 +84,19 @@ void do_reboot(enum action action)
 			platform_do_reboot("");
 			break;
 #endif
+		case ACTION_START:
+		case ACTION_REBOOT_BOOTLOADER:
+		case ACTION_REBOOT_RECOVERY:
+		case ACTION_REBOOT_FASTBOOTD:
+		case ACTION_REBOOT_DOWNLOAD:
+			platform_prepare_reboot();
+			platform_do_reboot(
+				action == ACTION_REBOOT_BOOTLOADER ? "reboot-bootloader" :
+				action == ACTION_REBOOT_RECOVERY ? "reboot-recovery" :
+				action == ACTION_REBOOT_FASTBOOTD ? "reboot-fastboot" :
+				action == ACTION_REBOOT_DOWNLOAD ? "reboot-download" : ""
+			);
+			break;
 		default:
 			break;
 	}
@@ -113,7 +107,22 @@ void do_reboot(enum action action)
 
 void notify_action_start(void)
 {
-	do_reboot(current_action);
+	switch (current_action)
+	{
+		case ACTION_SWITCH_THEME:
+			int currentTheme = lk3rd_get_theme() + 1;	
+			int maxTheme = THEME_END;
+			if (currentTheme >= maxTheme) {
+				currentTheme = 0;
+			}
+			lk3rd_set_theme(currentTheme);
+			clear_screen(FONT_BLACK);
+			draw_menu(current_action);
+
+			break;
+		default:
+			do_reboot(current_action);
+	}
 	return;
 }
 

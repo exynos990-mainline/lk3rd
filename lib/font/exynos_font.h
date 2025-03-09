@@ -23,8 +23,8 @@
 #ifndef __EXYNOS_FONT_H__
 #define __EXYNOS_FONT_H__
 
-#define FONT_X 16
-#define FONT_Y 32
+#define FONT_X	16
+#define FONT_Y	32
 
 static u8 const font[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -2078,3 +2078,6 @@ static u8 const font[] = {
 };
 
 #endif /* __EXYNOS_FONT_H__ */
+
+
+

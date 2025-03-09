@@ -37,6 +37,10 @@
 #define LCD_WIDTH				1440
 #define LCD_HEIGHT				3200
 #define LCD_OFFSET				96
+#define POWER_TOP 1050
+#define POWER_HEIGHT 200
+#define VOL_TOP 500
+#define VOL_HEIGHT 400
 
 /* =================================================== */
 /* Below configs can be used by display member only.

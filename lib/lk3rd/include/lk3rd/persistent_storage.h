@@ -15,6 +15,7 @@ int persistent_storage_write(int entry, int value);
 
 enum persistent_storage_entries {
         LK3RD_MAINLINE_QUIRKS = 0x0,
+        LK3RD_SWITCH_THEME = 0x1,
 };
 
 #endif // LK3RD_PERSISTENTSTORAGE_H

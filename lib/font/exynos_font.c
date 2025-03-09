@@ -46,48 +46,155 @@ static u32 y_pos = 0;
 #define LCD_OFFSET			0
 #endif
 
+#ifndef max
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef min
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef abs
+#define abs(a) (((int)(a) < 0) ? -(a) : (a))
+#endif
+
+void draw_pixel(uint32_t x, uint32_t y, uint32_t color)
+{
+	volatile u32 *_fb = (u32*)0xf1000000;
+	_fb[(y + LCD_OFFSET) * LCD_WIDTH + x] = color;
+}
+
+void draw_squircle(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t radius, uint32_t color, bool corners[4])
+{
+	if (radius > min(width, height) / 2)
+	{
+		radius = min(width, height) / 2;
+	}
+
+	for (uint32_t i = 0; i < height; i++)
+	{
+		for (uint32_t j = 0; j < width - 2 * radius; j++)
+		{
+			draw_pixel(x + radius + j, y + i, color);
+		}
+	}
+
+	if (radius == 0) return;
+
+	for (uint32_t i = 0; i < height - 2 * radius; i++)
+	{
+		for (uint32_t j = 0; j < width; j++)
+		{
+			draw_pixel(x + j, y + radius + i, color);
+		}
+	}
+
+    for (uint32_t i = 0; i <= radius; i++)
+    {
+        for (uint32_t j = 0; j <= radius; j++)
+        {
+            if (i * i + j * j <= radius * radius)
+            {
+                // Top-left corner
+				if (corners[0]) draw_pixel(x + radius - i, y + radius - j, color);
+				// Top-right corner
+				if (corners[1]) draw_pixel(x + width - radius + i - 1, y + radius - j, color);
+				// Bottom-left corner
+				if (corners[2]) draw_pixel(x + radius - i, y + height - radius + j - 1, color);
+				// Bottom-right corner
+				if (corners[3]) draw_pixel(x + width - radius + i - 1, y + height - radius + j - 1, color);
+            }
+        }
+    }
+}
+
+void draw_line(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint32_t width, uint32_t color)
+{
+	int dx = x2 - x1;
+	int dy = y2 - y1;
+	int steps = max(abs(dx), abs(dy));
+	float x_inc = dx / (float)steps;
+	float y_inc = dy / (float)steps;
+
+	for (int i = 0; i < steps; i++)
+	{
+		draw_squircle(x1 + i * x_inc, y1 + i * y_inc, width, width, 0, color, (bool[]){true, true, true, true});
+	}
+}
+
+void draw_full_squircle(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t radius, uint32_t color)
+{
+	draw_squircle(x, y, width, height, radius, color, (bool[]){true, true, true, true});
+}
+
+void draw_circle(uint32_t x, uint32_t y, uint32_t radius, uint32_t color)
+{
+	draw_squircle(x, y, 2 * radius, 2 * radius, radius, color, (bool[]){true, true, true, true});
+}
+
+void draw_rectangle(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t color)
+{
+	draw_full_squircle(x, y, width, height, 0, color);
+}
+
+void draw_triangle(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint32_t x3, uint32_t y3, uint32_t fill_colour)
+{
+	/*
+	 *      x1,y1
+	 *        /\
+	 *       /  \
+	 *      /    \
+	 *     /______\
+	 *   x2,y2   x3,y3
+	 */
+
+	int minX = min(x1, min(x2, x3));
+	int minY = min(y1, min(y2, y3));
+	int maxX = max(x1, max(x2, x3));
+	int maxY = max(y1, max(y2, y3));
+
+	for (int x = minX; x <= maxX; x++)
+	{
+		for (int y = minY; y <= maxY; y++)
+		{
+			int w0 = (x1 - x) * (y2 - y1) - (x2 - x1) * (y1 - y);
+			int w1 = (x2 - x) * (y3 - y2) - (x3 - x2) * (y2 - y);
+			int w2 = (x3 - x) * (y1 - y3) - (x1 - x3) * (y3 - y);
+
+			if ((w0 >= 0 && w1 >= 0 && w2 >= 0) || (w0 <= 0 && w1 <= 0 && w2 <= 0))
+			{
+				draw_pixel(x, y, fill_colour);
+			}
+		}
+	}
+}
+
 /* Clears the framebuffer by filling it with a specified color */
 void clear_screen(uint32_t color)
 {
-	volatile u32 *_fb = (u32*)0xf1000000;
 	y_pos = 0;
-
-	for (uint32_t y = LCD_OFFSET; y < LCD_HEIGHT; y++)
-	{
-		for (uint32_t x = 0; x < LCD_WIDTH; x++)
-		{
-			_fb[y * LCD_WIDTH + x] = color;
-		}
-	}
+	draw_rectangle(0, 0, LCD_WIDTH, LCD_HEIGHT, color);
 }
 
-void clear_line(uint32_t color, uint32_t line_number)
+void clear_line(uint32_t color, uint32_t clear_y_pos, bool reset_y_pos)
 {
-	volatile u32 *_fb = (u32*)0xf1000000;
-	y_pos = 0;
-
-	for (uint32_t y = 0; y < FONT_Y; y++)
-	{
-		for (uint32_t x = 0; x < LCD_WIDTH; x++)
-		{
-			_fb[(line_number * FONT_Y + LCD_OFFSET + y) * LCD_WIDTH + x] = color;
-		}
-	}
+	if (reset_y_pos) y_pos = 0;
+	draw_rectangle(0, clear_y_pos, LCD_WIDTH, FONT_Y, color);
 }
+
+#define FONT_SCALE 2
 
 /* Fill the frame buffer one character at a time */
 static int fill_fb_one_char(u32 *fb_buf, u32 x_pos, u32 fb_width, char ascii,
-		u32 y_pos, u32 font_color, u32 bg_color)
+	u32 y_pos, u32 font_color, u32 bg_color)
 {
-	int i, j;
-	u32 offset; /* Offset of font array, exynos_font.h */
-	u32 *fb_ptr;
+int i, j;
+u32 offset; /* Offset of font array, exynos_font.h */
+u32 *fb_ptr;
 
-	/* From Null(0x00) to '~'(0x7E) */
-	if (ascii < 32 || ascii > 126)
-		return -1;
+/* From Null(0x00) to '~'(0x7E) */
+if (ascii < 32 || ascii > 126)
+	return -1;
 
-	offset = LENGTH_OF_A_CHAR_ARRAY * (ascii - ALPHANUMERIC_OFFSET);
+offset = LENGTH_OF_A_CHAR_ARRAY * (ascii - ALPHANUMERIC_OFFSET);
 
 	for (i = 0; i < FONT_Y; i++) {
 		/* Move to fill next or start pixel of fb */
@@ -122,8 +229,9 @@ static int fill_fb_one_char(u32 *fb_buf, u32 x_pos, u32 fb_width, char ascii,
 		offset++;
 	}
 
-	return 0;
+return 0;
 }
+
 
 static void initialize_font_fb(void)
 {
@@ -240,3 +348,12 @@ int print_lcd_update(u32 font_color, u32 bg_color, const char *fmt, ...)
 	return 0;
 }
 
+u32 get_y_pos(void)
+{
+	return y_pos;
+}
+
+void update_y_pos(u32 y)
+{
+	y_pos = y;
+}
