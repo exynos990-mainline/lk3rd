@@ -136,7 +136,7 @@
 #define __LEAF_FN __attribute__((__leaf__))
 #define __OPTIMIZE(x) __attribute__((optimize(x)))
 #define __THREAD_ANNOTATION(x)
-#define __has_feature(x) 0
+//#define __has_feature(x) 0
 #else
 #define __LEAF_FN
 #define __OPTIMIZE(x)
