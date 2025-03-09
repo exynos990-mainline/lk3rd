@@ -48,7 +48,7 @@ typedef struct ExynosBootInfo {
 } ExynosBootInfo;
 
 #if (__STDC_VERSION__ >= 201112L) || defined(__cplusplus)
-static_assert(sizeof(struct ExynosBootInfo) == 32);
+static_assert(sizeof(struct ExynosBootInfo) == 32, "");
 #endif
 
 int ab_set_active(int slot);

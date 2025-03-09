@@ -84,7 +84,7 @@ struct bootloader_message {
  * because A/B-specific fields may end up with different offsets.
  */
 #if (__STDC_VERSION__ >= 201112L) || defined(__cplusplus)
-static_assert(sizeof(struct bootloader_message) == 2048);
+static_assert(sizeof(struct bootloader_message) == 2048, "");
 #endif
 
 /**
@@ -120,7 +120,7 @@ struct bootloader_message_ab {
  * bootloader_message_ab struct (b/29159185).
  */
 #if (__STDC_VERSION__ >= 201112L) || defined(__cplusplus)
-static_assert(sizeof(struct bootloader_message_ab) == 4096);
+static_assert(sizeof(struct bootloader_message_ab) == 4096, "");
 #endif
 
 #define BOOT_CTRL_MAGIC		0x42414342 /* Bootloader Control AB */
@@ -173,7 +173,7 @@ struct bootloader_control {
 
 #if (__STDC_VERSION__ >= 201112L) || defined(__cplusplus)
 static_assert(sizeof(struct bootloader_control) ==
-              sizeof(((struct bootloader_message_ab *)0)->slot_suffix));
+              sizeof(((struct bootloader_message_ab *)0)->slot_suffix), "");
 #endif
 
 #ifdef __cplusplus
