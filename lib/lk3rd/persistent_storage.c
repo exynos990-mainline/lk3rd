@@ -10,8 +10,7 @@
 #include <part.h>
 #include <lk3rd/persistent_storage.h>
 
-#define PERSISTENT_STORAGE_OFFSET 0x175000
-#define PERSISTENT_STORAGE_SIZE 0x2000
+#define PERSISTENT_STORAGE_OFFSET (0x175000)
 #define PERSISTENT_STORAGE_ENTRIES sizeof(persistent_storage_entries)
 #define TEMP_BUFFER_OFFSET 0x94000000
 
@@ -22,11 +21,9 @@ int persistent_storage_read(int entry)
 
 	part = part_get("lk3rd");
 
-	part_read_partial(part, (void*)TEMP_BUFFER_OFFSET,
-				PERSISTENT_STORAGE_OFFSET,
-				PERSISTENT_STORAGE_SIZE);
+	part_read(part, (void*)TEMP_BUFFER_OFFSET);
 
-	return buffer[entry];
+	return buffer[(PERSISTENT_STORAGE_OFFSET / sizeof(int)) + entry];
 }
 
 int persistent_storage_write(int entry, int value)
@@ -36,15 +33,11 @@ int persistent_storage_write(int entry, int value)
 
 	part = part_get("lk3rd");
 
-	part_read_partial(part, (void*)TEMP_BUFFER_OFFSET,
-				PERSISTENT_STORAGE_OFFSET,
-				PERSISTENT_STORAGE_SIZE);
+	part_read(part, (void*)TEMP_BUFFER_OFFSET);
 
-	buffer[entry] = value;
+	buffer[(PERSISTENT_STORAGE_OFFSET / sizeof(int)) + entry] = value;
 
-	part_write_partial(part, (void*)TEMP_BUFFER_OFFSET,
-				 PERSISTENT_STORAGE_OFFSET,
-				 PERSISTENT_STORAGE_SIZE);
+	part_write(part, (void*)TEMP_BUFFER_OFFSET);
 
 	printf("Wrote %i to %x\n", value, *buffer);
 

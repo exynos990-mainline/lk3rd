@@ -40,6 +40,7 @@
 #include <dev/rpmb.h>
 #include <dev/scsi.h>
 #include <dev/pmucal_local.h>
+#include <lk3rd/persistent_storage.h>
 #include <lk3rd/mainline_quirks.h>
 #include <lk3rd/fastboot_menu.h>
 
@@ -704,6 +705,14 @@ int fb_do_flash(char *cmd_buffer, unsigned int rx_sz)
 	{
 		print_lcd_update(FONT_ORANGE, FONT_BLACK, "Patching lk3rd, please do not turn off/reboot your device.");
 
+		int persistent_storage_entry_num = sizeof(enum persistent_storage_entries);
+		int persistent_entries[persistent_storage_entry_num] = {};
+
+		for(int i = 0; i < persistent_storage_entry_num; i++)
+		{
+			persistent_entries[i] = persistent_storage_read(i);
+		}
+
 		void *part = part_get("lk3rd");
 		struct pit_entry *lk3rd_entry = (struct pit_entry *)part;
 
@@ -722,6 +731,13 @@ int fb_do_flash(char *cmd_buffer, unsigned int rx_sz)
 
 		flash_using_part("lk3rd", response, lk3rd_entry->blknum * PIT_UFS_BLK_SIZE, (void *)BOOT_BASE);
 
+		print_lcd_update(FONT_ORANGE, FONT_BLACK, "Restoring settings...");
+
+		for(int i = 0; i < persistent_storage_entry_num; i++)
+		{
+			persistent_storage_write(i, persistent_entries[i]);
+		}
+
 		print_lcd_update(FONT_GREEN, FONT_BLACK, "Patch complete!");
 
 		void *part_boot = part_get("boot");
@@ -734,7 +750,15 @@ int fb_do_flash(char *cmd_buffer, unsigned int rx_sz)
 	}
 	else if(!strcmp(dest, "lk3rd"))
 	{
-		print_lcd_update(FONT_ORANGE, FONT_BLACK, "Patching LK3RD, please do not turn off/reboot your device.");
+		print_lcd_update(FONT_ORANGE, FONT_BLACK, "Patching lk3rd, please do not turn off/reboot your device.");
+
+		int persistent_storage_entry_num = sizeof(enum persistent_storage_entries);
+		int persistent_entries[persistent_storage_entry_num] = {};
+
+		for(int i = 0; i < persistent_storage_entry_num; i++)
+		{
+			persistent_entries[i] = persistent_storage_read(i);
+		}
 
 		void *part = part_get("lk3rd");
 
@@ -761,6 +785,13 @@ int fb_do_flash(char *cmd_buffer, unsigned int rx_sz)
 
 		flash_using_part("lk3rd", response,
 			downloaded_data_size, (void *)interface.transfer_buffer);
+
+		print_lcd_update(FONT_ORANGE, FONT_BLACK, "Restoring settings...");
+
+		for(int i = 0; i < persistent_storage_entry_num; i++)
+		{
+			persistent_storage_write(i, persistent_entries[i]);
+		}
 
 		print_lcd_update(FONT_GREEN, FONT_BLACK, "Patch complete!");
 
