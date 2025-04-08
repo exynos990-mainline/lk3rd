@@ -26,6 +26,18 @@
 #define FONT_X 16
 #define FONT_Y 32
 
+#define FONT_SCALE 2
+
+#ifndef max
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef min
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef abs
+#define abs(a) (((int)(a) < 0) ? -(a) : (a))
+#endif
+
 static u8 const font[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x7f, 0xfc, 0x7f, 0xfc,
