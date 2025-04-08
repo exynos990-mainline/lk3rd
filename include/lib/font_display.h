@@ -24,6 +24,7 @@
 #define __FONT_DISPLAY_H__
 
 #include <target/dpu_config.h>
+#include <stdbool.h>
 
 #define FONT_BLACK		0xFF000000
 #define FONT_GRAY		0xFF808080
@@ -34,9 +35,6 @@
 #define FONT_YELLOW		0xFFFFFF00
 #define FONT_ORANGE		0xFFFFA000
 
-/* Fill a frame buffer with characters */
-int fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str, u32 font_color, u32 bg_color);
-
 #ifdef CONFIG_DISPLAY_DRAWFONT
 int print_lcd(u32 font_color, u32 bg_color, const char *fmt, ...);
 int print_lcd_update(u32 font_color, u32 bg_color, const char *fmt, ...);
@@ -45,7 +43,19 @@ int print_lcd_update(u32 font_color, u32 bg_color, const char *fmt, ...);
 #define print_lcd_update(font_color, bg_color, fmt, str...) do {} while (0)
 #endif
 
-int clear_screen(int);
-int clear_line(int, uint32_t);
+void draw_pixel(uint32_t x, uint32_t y, uint32_t color);
+void draw_line(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint width, uint32_t color);
+
+void draw_squircle(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t radius, uint32_t color, bool corners[4]);
+void draw_full_squircle(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t radius, uint32_t color);
+void draw_circle(uint32_t x, uint32_t y, uint32_t radius, uint32_t color);
+void draw_rectangle(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t color);
+void draw_triangle(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint32_t x3, uint32_t y3, uint32_t fill_colour);
+
+void clear_screen(uint32_t color);
+void clear_line(uint32_t color, uint32_t line_number, bool reset_y_pos);
+
+u32 get_y_pos(void);
+void update_y_pos(u32 y);
 
 #endif /* __FONT_DISPLAY_H__ */
