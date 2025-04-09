@@ -414,6 +414,21 @@ void platform_prepare_reboot(void)
 	scsi_do_ssu();
 }
 
+void lk3rd_emergency_reboot(void)
+{
+	writel(REBOOT_MODE_LK3RD_FAIL, EXYNOS9830_POWER_SYSIP_DAT0);
+
+	/* Set reboot reason */
+	writel(SEC_RESET_REASON_UNKNOWN, EXYNOS9830_POWER_BASE + SEC_DEBUG_PANIC_INFORM);
+
+	writel(0, CONFIG_RAMDUMP_SCRATCH);
+	sec_set_reboot_magic(SEC_REBOOT_NORMAL, SEC_REBOOT_END_OFFSET, 0xFF);
+	writel(0, EXYNOS9830_POWER_RST_STAT);
+	writel(readl(EXYNOS9830_POWER_SYSTEM_CONFIGURATION) | 0x2, EXYNOS9830_POWER_SYSTEM_CONFIGURATION);
+
+	return;
+}
+
 void platform_do_reboot(const char *cmd_buf)
 {
 	int reason = SEC_RESET_REASON_UNKNOWN;

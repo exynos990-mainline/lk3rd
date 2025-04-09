@@ -30,6 +30,7 @@
 #include <platform/charger.h>
 #include <lib/ab_update.h>
 #include <platform/secure_boot.h>
+#include <platform/usb.h>
 #include <platform/sizes.h>
 #include <platform/bootimg.h>
 #include <lib/fdtapi.h>
@@ -42,6 +43,7 @@
 
 #include <kernel/thread.h>
 
+#include <lk3rd/boot_reason.h>
 #include <lk3rd/mainline_quirks.h>
 
 #include <app/exynos_boot/cmd_boot.h>
@@ -618,6 +620,7 @@ int load_boot_images(void)
 
 	if(strncmp((char*)boot_image->magic, BOOT_MAGIC, 8))
 	{
+		enter_reason = (char *)"boot failure!";
 		start_usb_gadget();
 		while(1){}
 	}
@@ -721,8 +724,9 @@ int boot_fb_continue(void)
 	}
 
 	if (ret) {
-		printf("Resuming fastboot mode\n");
-		start_usb_gadget();
+		printf("BOOT ERROR!\n");
+		platform_prepare_reboot();
+		lk3rd_emergency_reboot();
 	}
 
 	return ret;
@@ -843,8 +847,9 @@ int boot_fb_boot(unsigned long buf_addr, size_t size)
 	return 0;
 
 err:
-	printf("Resuming fastboot mode\n");
-	start_usb_gadget();
+	printf("BOOT ERROR!\n");
+	platform_prepare_reboot();
+	lk3rd_emergency_reboot();
 	return ret;
 }
 

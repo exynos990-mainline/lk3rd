@@ -251,7 +251,7 @@ static int _fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str,
 		ch = *(str++);
 		if (fill_fb_one_char(fb_buf, x_pos + (i * FONT_X), LCD_WIDTH,
 			ch, y_pos + LCD_OFFSET, font_color, bg_color)) {
-			printf("This(%c) character is not supported\n", ch);
+			// printf("This(%c) character is not supported\n", ch);
 		}
 	}
 
