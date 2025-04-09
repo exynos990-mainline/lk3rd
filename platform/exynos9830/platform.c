@@ -16,6 +16,7 @@
 #include <part.h>
 #include <dev/interrupt/arm_gic.h>
 #include <dev/timer/arm_generic.h>
+#include <platform/device_info.h>
 #include <platform/interrupts.h>
 #include <platform/sfr.h>
 #include <platform/uart.h>
@@ -47,6 +48,7 @@
 #include <ctype.h>
 #include <platform/b_rev.h>
 
+#include <lk3rd/boot_reason.h>
 #include <lk3rd/mainline_quirks.h>
 
 #ifdef CONFIG_GET_B_REV_FROM_ADC
@@ -75,9 +77,12 @@ struct chip_rev_info s5p_chip_rev;
 unsigned int charger_mode = 0;
 unsigned int board_id = CONFIG_BOARD_ID;
 int board_rev = -1;
-unsigned int dram_info[24] = { 0, 0, 0, 0 };
-unsigned long long dram_size_info = 0;
 unsigned int secure_os_loaded = 0;
+
+char *enter_reason = (char *)"UNKNOWN REASON? YOU SHOULDN'T SEE THIS!";
+
+struct ufs_device_info ufs_info = {0, (char *)"UNKNOWN UFS MANUFACTURER"};
+struct ram_info dram_info = {0, (char *)"UNKNOWN DRAM MANUFACTURER", (char *)"UNKNOWN DRAM TYPE"};
 
 volatile char *bootloader_cmdline;
 
@@ -302,83 +307,50 @@ static void display_rst_stat(u32 rst_stat)
 
 static void read_dram_info(void)
 {
-	char type[16];
-	char rank_num[20];
-	char manufacturer[20];
-	unsigned int M5 = 0, M6 = 0, M7 = 0, M8 = 0;
-	unsigned int tmp = 0;
+        u64 dram_manufacturer_info = readq(0x206CC00); // Got address from reverse engineering S-LK
+        dram_manufacturer_info >>= 8;
+        dram_manufacturer_info &= 0xFF;
 
-	printf("%s %d\n", __func__, __LINE__);
-	/* 1. Type */
-	dram_info[0] = readl(DRAM_INFO);
-	tmp = dram_info[0] & 0xF;
-	printf("%s %d\n", __func__, __LINE__);
+	dram_info.ram_size = (readq(DRAM_SIZE_INFO) >> 20) / 1024;
 
-	switch (tmp) {
-	case 0x0:
-		strcpy(type, "LPDDR4");
-		break;
-	case 0x2:
-		strcpy(type, "LPDDR4X");
-		break;
-	default:
-		printf("Type None!\n");
+	u32 dram_information = readl(0x02062C00); // Got address from reverse engineering S-LK
+	u32 dram_ddr_type = dram_information & 0xF; // Isolate type
+
+	switch(dram_ddr_type)
+	{
+		case 1:
+			dram_info.ram_type = (char *)"LPDDR4";
+			break;
+
+		case 2:
+			dram_info.ram_type = (char *)"LPDDR4X";
+			break;
+
+		case 4:
+			dram_info.ram_type = (char *)"LPDDR5";
+			break;
+
+		default:
+			break;
 	}
 
-	printf("%s %d\n", __func__, __LINE__);
-	/* 2. rank_num */
-	dram_info[0] = readl(DRAM_INFO);
-	tmp = (dram_info[0] >> 4) & 0xF;
+	switch(dram_manufacturer_info)
+	{
+		case 0x01:
+			dram_info.ram_manufacturer = (char *)"Samsung";
+			break;
 
-	printf("%s %d\n", __func__, __LINE__);
-	switch (tmp) {
-	case 0x0:
-		strcpy(rank_num, "1RANK");
-		break;
-	case 0x3:
-		strcpy(rank_num, "2RANK");
-		break;
-	default:
-		printf("Rank_num None!\n");
+		case 0x06:
+			dram_info.ram_manufacturer = (char *)"SKHynix";
+			break;
+
+		case 0xFF:
+			dram_info.ram_manufacturer = (char *)"Micron";
+			break;
+
+		default:
+			break;
 	}
-
-	printf("%s %d\n", __func__, __LINE__);
-	/* 3. manufacturer */
-	dram_info[0] = readl(DRAM_INFO);
-	tmp = (dram_info[0] >> 8) & 0xFF;
-	M5 = tmp;
-
-	printf("%s %d\n", __func__, __LINE__);
-	switch (tmp) {
-	case 0x01:
-		strcpy(manufacturer, "Samsung");
-		break;
-	case 0x06:
-		strcpy(manufacturer, "SK hynix");
-		break;
-	case 0xFF:
-		strcpy(manufacturer, "Micron");
-		break;
-	default:
-		printf("Manufacturer None!\n");
-	}
-
-	printf("%s %d\n", __func__, __LINE__);
-	dram_info[1] = readl(DRAM_INFO + 0x4);
-	dram_info[2] = readl(DRAM_SIZE_INFO);
-	dram_info[3] = readl(DRAM_SIZE_INFO + 0x4);
-	dram_size_info |= (unsigned long long)(dram_info[2]);
-	dram_size_info |= (unsigned long long)(dram_info[3]) << 32;
-	/* Set to GB */
-	dram_size_info = dram_size_info / 1024 / 1024 / 1024;
-
-	M6 = dram_info[1] & 0xFF;
-	M7 = (dram_info[1] >> 8) & 0xFF;
-	M8 = (dram_info[0] & 0x3) | (((dram_info[0] >> 20) & 0xF) << 2) | ((dram_info[0]  >> 16 & 0x3) << 6);
-
-	printf("DRAM %llu GB %s %s %s M5=0x%02x M6=0x%02x M7=0x%02x M8=0x%02x\n",
-			dram_size_info,	type, rank_num, manufacturer,
-			M5, M6, M7, M8);
 }
 
 #define EL3_MON_VERSION_STR_SIZE (180)
@@ -491,6 +463,7 @@ void platform_init(void)
 	get_bootloader_cmdline();
 	get_bootloader_reserved_memory();
 	get_board_rev();
+	read_dram_info();
 	pmic_init();
 	display_pmic_info();
 #ifdef CONFIG_SUB_PMIC_S2DOS05

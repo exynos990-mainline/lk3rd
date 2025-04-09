@@ -6,11 +6,17 @@
  * https://opensource.org/licenses/MIT
  *
  */
+#include <platform/device_info.h>
+#include <platform/secure_boot.h>
+#include <platform/usb.h>
+
+#include <ctype.h>
 #include <lib/font_display.h>
 #include <lib/version.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include <lk3rd/boot_reason.h>
 #include "include/lk3rd/display.h"
 #include "include/lk3rd/fastboot_menu.h"
 #include "include/lk3rd/mainline_quirks.h"
@@ -51,6 +57,30 @@ const char *empty_pad_string(u32 pad, const char *str)
 	return padded_string;
 }
 
+const char *title_case(const char *str) {
+	char *title_str = malloc(strlen(str) + 1);
+	int newWord = 1;
+
+	strcpy(title_str, str);
+
+	for (int i = 0; title_str[i] != '\0'; i++) {
+		if (isspace(title_str[i])) {
+			newWord = 1; // Next character will be a new word
+		}
+		else {
+			if (newWord) {
+				title_str[i] = toupper(title_str[i]);
+				newWord = 0;
+			}
+			else {
+				title_str[i] = tolower(title_str[i]);
+			}
+		}
+	}
+
+	return title_str;
+}
+
 const char* get_action_text(enum action current_action)
 {
 	switch(current_action)
@@ -74,6 +104,8 @@ const char* get_action_text(enum action current_action)
 
 void draw_menu(enum action current_action)
 {
+	u32 orig_y_pos = 0;
+
 	int start_offset = LCD_WIDTH / 12.1;
 
 	int chevron_height = LCD_HEIGHT / 77.2;
@@ -87,9 +119,9 @@ void draw_menu(enum action current_action)
 	int text_offset = LCD_WIDTH / 8.8888888888888;
 
 	int warning_x = LCD_WIDTH / 13;
-	int warning_y = LCD_HEIGHT * .566;
-	int warning_width = LCD_WIDTH * (1 / 10);
-	int warning_height = LCD_HEIGHT * .07;
+	int warning_y = LCD_HEIGHT * .585;
+	int warning_width = LCD_WIDTH * 3 / 32;
+	int warning_height = LCD_HEIGHT * .0375;
 	int warning_thickness = LCD_WIDTH / 80;
 
 	draw_line(LCD_WIDTH - start_offset + chevron_offset, VOL_TOP + chevron_height, LCD_WIDTH - start_offset + chevron_offset + chevron_width / 2, VOL_TOP, chevron_thickness, FONT_WHITE);						//  "//\\"
@@ -121,21 +153,75 @@ void draw_menu(enum action current_action)
 	print_lcd_update(FONT_RED, FONT_BLACK, "lk3rd FastBoot Mode", MAX_NUM_CHAR_PER_LINE);
 	update_y_pos(LCD_HEIGHT * .66);
 
-	print_lcd_update(FONT_WHITE, FONT_BLACK, "PRODUCT_NAME - %s", version.platform);
-	print_lcd_update(FONT_WHITE, FONT_BLACK, "BOOTLOADER VERSION - 2.0 (%s)", version.buildid);
+	print_lcd_update(FONT_WHITE, FONT_BLACK, "Product name: %s", TARGET);
+	print_lcd_update(FONT_WHITE, FONT_BLACK, "Bootloader version: 2.0 (%s)", version.buildid);
+	print_lcd_update(FONT_WHITE, FONT_BLACK, "SoC: %s", version.platform);
+	print_lcd_update(FONT_WHITE, FONT_BLACK, "Serial (ChipID): %s", fastboot_get_serialno_string());
 
-	u32 orig_y_pos = get_y_pos();
-
-	print_lcd_update(FONT_WHITE, FONT_BLACK, "DEVICE STATE - ");
-
+	orig_y_pos = get_y_pos();
+	print_lcd_update(FONT_WHITE, FONT_BLACK, "Secure boot: ");
 	update_y_pos(orig_y_pos);
 
-	print_lcd_update(FONT_RED,   FONT_BLACK, empty_pad_string(strlen("DEVICE STATE - "), "unlocked"));
+	switch(read_secure_chip())
+	{
+		case 0:
+			print_lcd_update(FONT_RED,   FONT_BLACK, empty_pad_string(strlen("Secure boot: "), "DISABLED"));
+			break;
+
+		case 1:
+			print_lcd_update(FONT_YELLOW, FONT_BLACK, empty_pad_string(strlen("Secure boot: "), "TEST KEY"));
+			break;
+
+		case 2:
+			print_lcd_update(FONT_WHITE, FONT_BLACK, empty_pad_string(strlen("Secure boot: "), "PRODUCTION"));
+			break;
+
+		default:
+			print_lcd_update(FONT_RED,   FONT_BLACK, empty_pad_string(strlen("Secure boot: "), "BROKEN!"));
+			break;
+	}
+
+	orig_y_pos = get_y_pos();
+	print_lcd_update(FONT_WHITE, FONT_BLACK, "Lk3rd production build: ");
+	update_y_pos(orig_y_pos);
+
+	print_lcd_update(FONT_RED,   FONT_BLACK, empty_pad_string(strlen("Lk3rd production build: "), "no"));
+
+	print_lcd_update(FONT_WHITE, FONT_BLACK, "DRAM: %lldGB %s %s", dram_info.ram_size, dram_info.ram_manufacturer, dram_info.ram_type);
+	print_lcd_update(FONT_WHITE, FONT_BLACK, "UFS: %iGB %s", ufs_info.ufs_size, title_case(ufs_info.ufs_manufacturer));
+
+	orig_y_pos = get_y_pos();
+	print_lcd_update(FONT_WHITE, FONT_BLACK, "Device state: ");
+	update_y_pos(orig_y_pos);
+
+	print_lcd_update(FONT_RED,   FONT_BLACK, empty_pad_string(strlen("Device state: "), "unlocked"));
+
+	orig_y_pos = get_y_pos();
+	print_lcd_update(FONT_WHITE, FONT_BLACK, "Mainline quirks: ");
+	update_y_pos(orig_y_pos);
 
 	if(lk3rd_get_mainline_quirks() == 1)
-		print_lcd_update(FONT_YELLOW, FONT_BLACK, "MAINLINE QUIRKS - enabled "); 
+		print_lcd_update(FONT_YELLOW, FONT_BLACK, empty_pad_string(strlen("Mainline quirks: "), "enabled ")); 
 	else
-		print_lcd_update(FONT_GREEN, FONT_BLACK,  "MAINLINE QUIRKS - disabled");
+		print_lcd_update(FONT_GREEN, FONT_BLACK, empty_pad_string(strlen("Mainline quirks: "), "disabled"));
 
+	orig_y_pos = get_y_pos();
+	print_lcd_update(FONT_WHITE, FONT_BLACK, "Enter reason: ");
+	update_y_pos(orig_y_pos);
+
+	if(strcmp(enter_reason, "boot failure!") == 0)
+		print_lcd_update(FONT_RED,   FONT_BLACK, "%s", empty_pad_string(strlen("Enter reason: "), enter_reason));
+	else
+		print_lcd_update(FONT_WHITE, FONT_BLACK, "%s", empty_pad_string(strlen("Enter reason: "), enter_reason));
+
+	orig_y_pos = get_y_pos();
+	print_lcd_update(FONT_WHITE, FONT_BLACK, "UART: ");
+	update_y_pos(orig_y_pos);
+
+#ifdef PRINT_DEBUG
+	print_lcd_update(FONT_RED,   FONT_BLACK, empty_pad_string(strlen("UART: "), "enabled"));
+#else
+	print_lcd_update(FONT_WHITE, FONT_BLACK, empty_pad_string(strlen("UART: "), "disabled"));
+#endif
 	print_lcd_update(FONT_BLACK, FONT_BLACK, ""); // Padding for any device messages
 }

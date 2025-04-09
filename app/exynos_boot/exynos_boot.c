@@ -23,6 +23,8 @@
 #include <dev/boot.h>
 #include <dev/debug/dss.h>
 #include <dev/debug/dss_store_ramdump.h>
+
+#include <lk3rd/boot_reason.h>
 #include <lk3rd/mainline_quirks.h>
 
 int cmd_boot(int argc, const cmd_args *argv);
@@ -62,15 +64,27 @@ static void exynos_boot_task(const struct app_descriptor *app, void *args)
 	mdelay(50);
 	val = exynos_gpio_get_value(bank, gpio);
 
+	if(readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_LK3RD_FAIL)
+	{
+		writel(0, EXYNOS9830_POWER_SYSIP_DAT0); // Clear reboot reason
+		enter_reason = (char *)"boot failure!";
+		start_usb_gadget();
+		return;
+	}
+
 	if(readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_LK3RD)
 	{
 		writel(0, EXYNOS9830_POWER_SYSIP_DAT0); // Clear reboot reason
+		enter_reason = (char *)"lk3rd request via PMU DAT0";
 		start_usb_gadget();
 		return;
 	}
 
 	if (!val)
+	{
+		enter_reason = (char *)"volume down pressed";
 		start_usb_gadget();
+	}
 	else
 	{
 		if (lk3rd_get_mainline_quirks() == 0)

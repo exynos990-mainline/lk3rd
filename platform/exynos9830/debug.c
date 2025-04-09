@@ -96,7 +96,7 @@ void platform_dputc(char c)
 {
 #ifdef PRINT_DEBUG
 	putc_fb(c);
-    uart_char_out(c);
+	uart_char_out(c);
 #endif
 }
 

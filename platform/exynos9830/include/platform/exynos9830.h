@@ -144,5 +144,6 @@
 #define SEC_RESET_REASON_BOOTLOADER     (SEC_RESET_REASON_PREFIX | 0x0D)
 #define REBOOT_MODE_FASTBOOT            0xFA
 #define REBOOT_MODE_LK3RD               0x4C // Custom reboot mode
+#define REBOOT_MODE_LK3RD_FAIL		(REBOOT_MODE_LK3RD | 0x0F)
 
 #endif	/* __EXYNOS9830_H__ */

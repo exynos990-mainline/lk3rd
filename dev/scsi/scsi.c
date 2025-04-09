@@ -10,9 +10,11 @@
  *
  */
 
-#include <dev/scsi.h>
+#include <lk/err.h>  
 #include <lib/font_display.h>
-#include <lk/err.h>
+#include <platform/device_info.h>
+#include <dev/scsi.h>
+#include <stdlib.h>
 
 #define	SCSI_UNMAP_DESC_LEN	16
 
@@ -591,6 +593,12 @@ status_t scsi_scan(scsi_device_t *sdev, u32 wlun, u32 dev_num, exec_t *func,
 
 			block_size = get_dword_le(&g_buf[4]);
 			block_count = get_dword_le(&g_buf[0]) + 1;
+
+			if(sdev->lun == 0)
+			{
+				ufs_info.ufs_size = ((block_size * block_count) + 999999999) / 1000 / 1000 / 1000; // Lets assume Bytes -> Gigabytes for simplicity sake.
+				strcpy(ufs_info.ufs_manufacturer, sdev->vendor);
+			}
 
 			printf("[SCSI] LU%u\t%s\t%s\t%s\t%u\n", sdev->lun, sdev->vendor,
 					sdev->product, sdev->revision, block_count);

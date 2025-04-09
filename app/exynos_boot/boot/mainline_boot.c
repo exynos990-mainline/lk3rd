@@ -8,6 +8,7 @@
  */
 
 #include <platform/exynos9830.h>
+#include <platform/usb.h>
 #include <lib/console.h>
 #include <platform/bootimg.h>
 #include <pit.h>
@@ -19,6 +20,8 @@
 #include <dev/usb/gadget.h>
 #include <platform/mmu/mmu_func.h>
 #include <lib/font_display.h>
+
+#include <lk3rd/boot_reason.h>
 
 /* Hacky. */
 void arm_generic_timer_disable(void);
@@ -55,6 +58,7 @@ void mainline_boot(void)
 
 	if(strncmp((char*)boot_image->magic, BOOT_MAGIC, 8))
 	{
+		enter_reason = (char *)"boot failure!";
 		start_usb_gadget();
 		while(1){}
 	}
@@ -108,6 +112,7 @@ void mainline_boot_fb_boot(unsigned long buf_addr, size_t size)
 
 	if(strncmp((char*)b_hdr->magic, BOOT_MAGIC, 8))
 	{
+		enter_reason = (char *)"boot failure!";
 		start_usb_gadget();
 		while(1){}
 	}
