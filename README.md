@@ -45,6 +45,8 @@ flowchart LR
 - [BotchedRPR](https://github.com/BotchedRPR) ```Did loads of work, rewrote the entire PIT library so we had UFS up and got the bootloader to initially boot```
 - [ExtremeXT](https://github.com/ExtremeXT) ```Gave us info on ECT (Exynos Characteristics Table), which helped us boot android```
 - [halal-beef](https://github.com/halal-beef) ```Did initial efforts and boot attempts on the bootloader, got android booting, fixed bugs and major contributor```
+- [Luphaestus](https://github.com/Luphaestus) ```Redesigned the bootloader interface and did a huge build system revamp```
+- [Robotix22](https://github.com/Robotix22) ```Helped loads in DRAM Identification```
 
 ## TODO
 
