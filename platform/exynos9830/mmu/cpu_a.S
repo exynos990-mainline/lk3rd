@@ -1263,28 +1263,6 @@ disable_dcache:
 
 	.global enable_mmu
 enable_mmu:
-	mrs     x0, CurrentEL
-	lsr     x0, x0, #2
-3:
-	cmp     x0, #0x3
-	b.ne    2f
-	mrs     x0, sctlr_el3
-	orr     x0, x0, #(1<<0)
-	msr     sctlr_el3, x0
-	b       9f
-2:
-	cmp     x0, #0x2
-	b.ne    1f
-	mrs     x0, sctlr_el2
-	orr     x0, x0, #(1<<0)
-	msr     sctlr_el2, x0
-	b       9f
-1:
-	mrs     x0, sctlr_el1
-	orr     x0, x0, #(1<<0)
-	msr     sctlr_el1, x0
-9:
-	isb
 	ret
 
 	.global disable_mmu

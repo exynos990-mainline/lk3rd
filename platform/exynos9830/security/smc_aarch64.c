@@ -15,6 +15,9 @@
 
 u64 exynos_smc(u64 cmd, u64 arg1, u64 arg2, u64 arg3)
 {
+	// FIREPLACE HACK
+	return 0x0;
+
 	register u64 reg0 __asm__ ("x0") = cmd;
 	register u64 reg1 __asm__ ("x1") = arg1;
 	register u64 reg2 __asm__ ("x2") = arg2;
@@ -31,6 +34,7 @@ u64 exynos_smc(u64 cmd, u64 arg1, u64 arg2, u64 arg3)
 
 u64 exynos_smc_read(u64 cmd, u64 arg1)
 {
+	return 0x0;
 	register u64 reg0 __asm__ ("x0") = cmd;
 	register u64 reg1 __asm__ ("x1") = arg1;
 	register u64 reg2 __asm__ ("x2") = 0;
@@ -47,6 +51,7 @@ u64 exynos_smc_read(u64 cmd, u64 arg1)
 
 inline u64 exynos_smc_read_otp(u64 *cmd, u64 *arg1, u64 *arg2, u64 *arg3)
 {
+	return 0x0;
 	register u64 reg0 __asm__ ("x0") = *cmd;
 	register u64 reg1 __asm__ ("x1") = *arg1;
 	register u64 reg2 __asm__ ("x2") = *arg2;

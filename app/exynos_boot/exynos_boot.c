@@ -87,6 +87,7 @@ static void exynos_boot_task(const struct app_descriptor *app, void *args)
 	}
 	else
 	{
+		start_usb_gadget();
 		if (lk3rd_get_mainline_quirks() == 0)
 			cmd_boot(0, 0);
 		else

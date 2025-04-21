@@ -460,9 +460,9 @@ void platform_init(void)
 	print_acpm_version();
 
 	display_rst_stat(rst_stat);
-	get_bootloader_cmdline();
-	get_bootloader_reserved_memory();
-	get_board_rev();
+	//get_bootloader_cmdline();
+	//get_bootloader_reserved_memory();
+	//get_board_rev();
 	read_dram_info();
 	pmic_init();
 	display_pmic_info();
