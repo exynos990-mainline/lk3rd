@@ -166,7 +166,7 @@ struct pit_entry *pit_get_virtual_partition_entry(int partition)
 	}
 	else
 	{
-		printf("%s: invalid partition type", __func__);
+		printf("%s: invalid partition type\n", __func__);
 	}
 end:
 	return new;
@@ -237,7 +237,7 @@ error:
 	*/
 	panic("Failed to initialize PIT. \
 	       If this device doesn't have storage support, \
-	       or is eMMC, please set LK3RD_NO_PIT.");
+	       or is eMMC, please set LK3RD_NO_PIT.\n");
 }
 
 /*
@@ -319,6 +319,9 @@ int pit_access(struct pit_entry *ptn, int op, u64 addr, u32 size)
 {
 	bdev_t *dev;
 	u64 num, start, ret;
+	char *block_device = "scsi00";
+
+	snprintf(block_device, 7, "scsi%u", ptn->lun);
 
 	if(!pit_available)
 		return ERR_NOT_CONFIGURED;
@@ -332,7 +335,7 @@ int pit_access(struct pit_entry *ptn, int op, u64 addr, u32 size)
 	}
 
 	/* Open device, do operation */
-	dev = bio_open("scsi0");
+	dev = bio_open(block_device);
 	if (!dev)
 		return ERR_IO;
 
@@ -400,6 +403,9 @@ int pit_entry_write(struct pit_entry *ptn, void *buf, u64 offset, u64 size)
 {
 	bdev_t *dev;
 	u64 num, start, ret;
+	char *block_device = "scsi00";
+
+	snprintf(block_device, 7, "scsi%u", ptn->lun);
 
 	if(!pit_available)
 		return ERR_NOT_CONFIGURED;
@@ -411,7 +417,7 @@ int pit_entry_write(struct pit_entry *ptn, void *buf, u64 offset, u64 size)
 		return pit_flash_sparse(ptn, (u64)buf);
 	}
 
-	dev = bio_open("scsi0");
+	dev = bio_open(block_device);
 	if (!dev)
 		return ERR_IO;
 
@@ -443,11 +449,14 @@ int pit_entry_read(struct pit_entry *ptn, void *buf, u64 offset, u64 size)
 {
 	bdev_t *dev;
 	u64 num, start, ret;
+	char *block_device = "scsi00";
+
+	snprintf(block_device, 7, "scsi%u", ptn->lun);
 
 	if(!pit_available)
 		return ERR_NOT_CONFIGURED;
 
-	dev = bio_open("scsi0");
+	dev = bio_open(block_device);
 	if (!dev)
 		return ERR_IO;
 
@@ -478,11 +487,14 @@ int pit_entry_erase(struct pit_entry *ptn, u64 offset, u64 size)
 {
 	bdev_t *dev;
 	u64 num, start, ret;
+	char *block_device = "scsi00";
+
+	snprintf(block_device, 7, "scsi%u", ptn->lun);
 
 	if(!pit_available)
 		return ERR_NOT_CONFIGURED;
 
-	dev = bio_open("scsi0");
+	dev = bio_open(block_device);
 	if (!dev)
 		return ERR_IO;
 
