@@ -319,7 +319,7 @@ int pit_access(struct pit_entry *ptn, int op, u64 addr, u32 size)
 {
 	bdev_t *dev;
 	u64 num, start, ret;
-	char *block_device = "scsi00";
+	char *block_device = malloc(7 * sizeof(char));
 
 	snprintf(block_device, 7, "scsi%u", ptn->lun);
 
@@ -336,6 +336,9 @@ int pit_access(struct pit_entry *ptn, int op, u64 addr, u32 size)
 
 	/* Open device, do operation */
 	dev = bio_open(block_device);
+
+	free(block_device);
+
 	if (!dev)
 		return ERR_IO;
 
@@ -403,7 +406,7 @@ int pit_entry_write(struct pit_entry *ptn, void *buf, u64 offset, u64 size)
 {
 	bdev_t *dev;
 	u64 num, start, ret;
-	char *block_device = "scsi00";
+	char *block_device = malloc(7 * sizeof(char));
 
 	snprintf(block_device, 7, "scsi%u", ptn->lun);
 
@@ -418,6 +421,9 @@ int pit_entry_write(struct pit_entry *ptn, void *buf, u64 offset, u64 size)
 	}
 
 	dev = bio_open(block_device);
+
+	free(block_device);
+
 	if (!dev)
 		return ERR_IO;
 
@@ -449,7 +455,7 @@ int pit_entry_read(struct pit_entry *ptn, void *buf, u64 offset, u64 size)
 {
 	bdev_t *dev;
 	u64 num, start, ret;
-	char *block_device = "scsi00";
+	char *block_device = malloc(7 * sizeof(char));
 
 	snprintf(block_device, 7, "scsi%u", ptn->lun);
 
@@ -457,6 +463,9 @@ int pit_entry_read(struct pit_entry *ptn, void *buf, u64 offset, u64 size)
 		return ERR_NOT_CONFIGURED;
 
 	dev = bio_open(block_device);
+
+	free(block_device);
+
 	if (!dev)
 		return ERR_IO;
 
@@ -487,7 +496,7 @@ int pit_entry_erase(struct pit_entry *ptn, u64 offset, u64 size)
 {
 	bdev_t *dev;
 	u64 num, start, ret;
-	char *block_device = "scsi00";
+	char *block_device = malloc(7 * sizeof(char));
 
 	snprintf(block_device, 7, "scsi%u", ptn->lun);
 
@@ -495,6 +504,9 @@ int pit_entry_erase(struct pit_entry *ptn, u64 offset, u64 size)
 		return ERR_NOT_CONFIGURED;
 
 	dev = bio_open(block_device);
+
+	free(block_device);
+
 	if (!dev)
 		return ERR_IO;
 
