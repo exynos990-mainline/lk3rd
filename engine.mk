@@ -96,10 +96,7 @@ EXTRA_MODULE_ASMFLAGS :=
 #GLOBAL_COMPILEFLAGS += -Winline
 #GLOBAL_COMPILEFLAGS += -Wredundant-decls
 
-# if WERROR is set, add to the compile args
-ifeq (true,$(call TOBOOL,$(WERROR)))
 GLOBAL_COMPILEFLAGS += -Werror
-endif
 
 GLOBAL_LDFLAGS += $(addprefix -L,$(LKINC))
 
