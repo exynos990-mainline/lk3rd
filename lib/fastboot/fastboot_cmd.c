@@ -43,6 +43,7 @@
 #include <lk3rd/persistent_storage.h>
 #include <lk3rd/mainline_quirks.h>
 #include <lk3rd/fastboot_menu.h>
+#include <lk3rd/northern.h>
 
 #include "usb-def.h"
 
@@ -189,7 +190,6 @@ __attribute__((weak)) void get_serialno(int *chip_id)
 	 */
 }
 
-
 const char *fastboot_variables[] = 
 {
 	"version",
@@ -242,6 +242,7 @@ const char *oem_commands[] =
 	"reboot-download",
 	"enable-mainline-quirks",
 	"disable-mainline-quirks",
+	"northern",
 };
 
 enum oem_commands_id
@@ -250,6 +251,7 @@ enum oem_commands_id
 	OEM_REBOOT_DOWNLOAD,
 	OEM_ENABLE_MAINLINE_QUIRKS,
 	OEM_DISABLE_MAINLINE_QUIRKS,
+	OEM_NORTHERN,
 	OEM_CMD_END,
 };
 
@@ -1049,6 +1051,32 @@ int fb_do_oem(char *cmd_buffer, unsigned int rx_sz)
 					sprintf(response, "OKAY");
 				notify_action_switch(0);
 				break;
+
+		case OEM_NORTHERN:
+			uint32_t *framebuffer = (uint32_t *)0xF1000000;
+			const unsigned char *ptr = northern_bmp;
+
+			int width  = ptr[18] | (ptr[19] << 8) | (ptr[20] << 16) | (ptr[21] << 24);
+			int height = ptr[22] | (ptr[23] << 8) | (ptr[24] << 16) | (ptr[25] << 24);
+			int pixel_offset = ptr[10] | (ptr[11] << 8) | (ptr[12] << 16) | (ptr[13] << 24);
+
+			const unsigned char *pixels = northern_bmp + pixel_offset;
+			int row_stride = ((width * 3 + 3) / 4) * 4; 
+
+			for (int y = 0; y < height; ++y) {
+				const unsigned char *row = pixels + (height - 1 - y) * row_stride;
+
+				for (int x = 0; x < width; ++x) {
+					int idx = x * 3;
+					uint8_t b = row[idx + 0];
+					uint8_t g = row[idx + 1];
+					uint8_t r = row[idx + 2];
+					framebuffer[y * 1440 + x] = 0xFF << 24 | r << 16 | g << 8 | b;
+				}
+			}
+
+			sprintf(response, "OKAY");
+			break;
 
 		default:
 			sprintf(response, "FAILunsupported command");
