@@ -33,10 +33,6 @@ MODULE_DEPS += \
     dev/virtio/block \
     dev/virtio/gpu \
     dev/virtio/net \
-    dev/virtio/9p \
-    lib/cbuf \
-    lib/fdtwalk \
-    lib/fs/9p \
 
 GLOBAL_DEFINES += \
     MEMBASE=$(MEMBASE) \
