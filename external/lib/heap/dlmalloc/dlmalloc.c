@@ -5425,7 +5425,7 @@ struct mallinfo dlmallinfo(void) {
 #endif /* NO_MALLINFO */
 
 #if !NO_MALLOC_STATS
-void dlmalloc_stats(void) {
+void dlmalloc_stats() {
   internal_malloc_stats(gm);
 }
 #endif /* NO_MALLOC_STATS */
