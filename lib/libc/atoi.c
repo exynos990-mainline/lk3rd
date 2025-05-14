@@ -46,14 +46,10 @@ unsigned int atoui(const char *num)
 #endif
 }
 
-long atol(const char *num) {
-    long long value = 0;
+long atol(const char *num)
+{
+    long value = 0;
     int neg = 0;
-
-    // skip leading whitespace
-    while (isspace(num[0])) {
-        num++;
-    }
 
     if (num[0] == '0' && num[1] == 'x') {
         // hex
@@ -65,10 +61,7 @@ long atol(const char *num) {
         if (num[0] == '-') {
             neg = 1;
             num++;
-        } else if (num[0] == '+') {
-            num++;
         }
-
         while (*num && isdigit(*num))
             value = value * 10 + *num++  - '0';
     }
@@ -76,7 +69,7 @@ long atol(const char *num) {
     if (neg)
         value = -value;
 
-    return (long)value;
+    return value;
 }
 
 unsigned long atoul(const char *num)
