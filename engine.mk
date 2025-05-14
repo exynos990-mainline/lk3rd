@@ -337,18 +337,6 @@ clean: $(EXTRA_CLEANDEPS)
 install: all
 	scp $(OUTBIN) 192.168.0.4:/tftpboot
 
-list-arch:
-	@echo ARCH = ${ARCH}
-
-list-toolchain:
-	@echo TOOLCHAIN_PREFIX = ${TOOLCHAIN_PREFIX}
-
-tags: $(BUILDDIR)/srcfiles.txt $(BUILDDIR)/include_paths.txt
-	$(info generating tags)
-	@ctags -L $<
-
-.PHONY: all clean install list-arch list-toolchain tags
-
 # generate a config.h file with all of the GLOBAL_DEFINES laid out in #define format
 configheader:
 
