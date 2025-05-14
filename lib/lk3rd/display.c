@@ -102,56 +102,60 @@ const char* get_action_text(enum action current_action)
 	}
 }
 
+struct exynos_panel_info *common_get_lcd_info(void);
+
 void draw_menu(enum action current_action)
 {
+	struct exynos_panel_info *lcd_info = common_get_lcd_info();
+
 	u32 orig_y_pos = 0;
 
-	int start_offset = LCD_WIDTH / 12.1;
+	int start_offset = lcd_info->xres / 12.1;
 
-	int chevron_height = LCD_HEIGHT / 77.2;
-	int chevron_width = LCD_WIDTH / 24;
+	int chevron_height = lcd_info->yres / 77.2;
+	int chevron_width = lcd_info->xres / 24;
 	int chevron_offset = (start_offset - chevron_width) / 2;  // Calculate centering offset
-	int chevron_thickness = LCD_WIDTH / 210;
+	int chevron_thickness = lcd_info->xres / 210;
 
-	int power_width = LCD_WIDTH / 14.4;
-	int power_radius = LCD_WIDTH / 120;
+	int power_width = lcd_info->xres / 14.4;
+	int power_radius = lcd_info->xres / 120;
 
-	int text_offset = LCD_WIDTH / 8.8888888888888;
+	int text_offset = lcd_info->xres / 8.8888888888888;
 
-	int warning_x = LCD_WIDTH / 13;
-	int warning_y = LCD_HEIGHT * .585;
-	int warning_width = LCD_WIDTH * 3 / 32;
-	int warning_height = LCD_HEIGHT * .0375;
-	int warning_thickness = LCD_WIDTH / 80;
+	int warning_x = lcd_info->xres / 13;
+	int warning_y = lcd_info->yres * .585;
+	int warning_width = lcd_info->xres * 3 / 32;
+	int warning_height = lcd_info->yres * .0375;
+	int warning_thickness = lcd_info->xres / 80;
 
-	draw_line(LCD_WIDTH - start_offset + chevron_offset, VOL_TOP + chevron_height, LCD_WIDTH - start_offset + chevron_offset + chevron_width / 2, VOL_TOP, chevron_thickness, FONT_WHITE);						//  "//\\"
-	draw_line(LCD_WIDTH - start_offset + chevron_offset + chevron_width / 2, VOL_TOP, LCD_WIDTH - start_offset + chevron_offset + chevron_width, VOL_TOP + chevron_height, chevron_thickness, FONT_WHITE);				// "//  \\"
+	draw_line(lcd_info->xres - start_offset + chevron_offset, VOL_TOP + chevron_height, lcd_info->xres - start_offset + chevron_offset + chevron_width / 2, VOL_TOP, chevron_thickness, FONT_WHITE);						//  "//\\"
+	draw_line(lcd_info->xres - start_offset + chevron_offset + chevron_width / 2, VOL_TOP, lcd_info->xres - start_offset + chevron_offset + chevron_width, VOL_TOP + chevron_height, chevron_thickness, FONT_WHITE);				// "//  \\"
 
-	draw_line(LCD_WIDTH - start_offset + chevron_offset, VOL_TOP + VOL_HEIGHT - chevron_height, LCD_WIDTH - start_offset + chevron_offset + chevron_width / 2, VOL_TOP + VOL_HEIGHT, chevron_thickness, FONT_WHITE);		// "\\  //"
-	draw_line(LCD_WIDTH - start_offset + chevron_offset + chevron_width / 2, VOL_TOP + VOL_HEIGHT, LCD_WIDTH - start_offset + chevron_offset + chevron_width, VOL_TOP + VOL_HEIGHT - chevron_height, chevron_thickness, FONT_WHITE); // "\\//" 
+	draw_line(lcd_info->xres - start_offset + chevron_offset, VOL_TOP + VOL_HEIGHT - chevron_height, lcd_info->xres - start_offset + chevron_offset + chevron_width / 2, VOL_TOP + VOL_HEIGHT, chevron_thickness, FONT_WHITE);		// "\\  //"
+	draw_line(lcd_info->xres - start_offset + chevron_offset + chevron_width / 2, VOL_TOP + VOL_HEIGHT, lcd_info->xres - start_offset + chevron_offset + chevron_width, VOL_TOP + VOL_HEIGHT - chevron_height, chevron_thickness, FONT_WHITE); // "\\//" 
 
 	update_y_pos(VOL_TOP + VOL_HEIGHT / 2 - FONT_Y);
-	print_lcd(FONT_WHITE, FONT_BLACK, add_padding(LCD_WIDTH - strlen("Press the volume keys") * FONT_X - text_offset,  0, "Press the volume keys"));
-	print_lcd(FONT_WHITE, FONT_BLACK, add_padding(LCD_WIDTH - strlen("to select different menu") * FONT_X - text_offset,  0, "to select different menu"));
+	print_lcd(FONT_WHITE, FONT_BLACK, add_padding(lcd_info->xres - strlen("Press the volume keys") * FONT_X - text_offset,  0, "Press the volume keys"));
+	print_lcd(FONT_WHITE, FONT_BLACK, add_padding(lcd_info->xres - strlen("to select different menu") * FONT_X - text_offset,  0, "to select different menu"));
 
-	draw_full_squircle(LCD_WIDTH - start_offset, POWER_TOP, power_width, POWER_HEIGHT, power_radius, FONT_WHITE);
-	draw_rectangle(LCD_WIDTH - 10 - start_offset + power_width, POWER_TOP, 10 + start_offset - power_width, POWER_HEIGHT, FONT_WHITE);
+	draw_full_squircle(lcd_info->xres - start_offset, POWER_TOP, power_width, POWER_HEIGHT, power_radius, FONT_WHITE);
+	draw_rectangle(lcd_info->xres - 10 - start_offset + power_width, POWER_TOP, 10 + start_offset - power_width, POWER_HEIGHT, FONT_WHITE);
 
 	update_y_pos(POWER_TOP + POWER_HEIGHT / 2 - FONT_Y / 2);
 
-	draw_line(LCD_WIDTH - start_offset + start_offset / 3, POWER_TOP + (POWER_HEIGHT / 2) - (chevron_height / 2), LCD_WIDTH - start_offset + (2 * start_offset) / 3, POWER_TOP + (POWER_HEIGHT / 2), chevron_thickness, FONT_BLACK); // "\"
-	draw_line(LCD_WIDTH - start_offset + (2 * start_offset) / 3, POWER_TOP + (POWER_HEIGHT / 2), LCD_WIDTH - start_offset + start_offset / 3, POWER_TOP + (POWER_HEIGHT / 2) + (chevron_height / 2), chevron_thickness, FONT_BLACK); // "/"
+	draw_line(lcd_info->xres - start_offset + start_offset / 3, POWER_TOP + (POWER_HEIGHT / 2) - (chevron_height / 2), lcd_info->xres - start_offset + (2 * start_offset) / 3, POWER_TOP + (POWER_HEIGHT / 2), chevron_thickness, FONT_BLACK); // "\"
+	draw_line(lcd_info->xres - start_offset + (2 * start_offset) / 3, POWER_TOP + (POWER_HEIGHT / 2), lcd_info->xres - start_offset + start_offset / 3, POWER_TOP + (POWER_HEIGHT / 2) + (chevron_height / 2), chevron_thickness, FONT_BLACK); // "/"
 
 	const char* action_text = get_action_text(current_action);
-	print_lcd(FONT_WHITE, FONT_BLACK, add_padding(LCD_WIDTH - strlen(action_text) * FONT_X - text_offset,  0, action_text));
+	print_lcd(FONT_WHITE, FONT_BLACK, add_padding(lcd_info->xres - strlen(action_text) * FONT_X - text_offset,  0, action_text));
 
 	draw_triangle(warning_x + warning_width / 2, warning_y, warning_x, warning_y + warning_height, warning_x + warning_width, warning_y + warning_height, FONT_RED); // triangle
 	draw_full_squircle(warning_x + warning_width / 2 - warning_thickness / 2, warning_y + warning_height / 3, warning_thickness,  warning_height / 3, warning_thickness / 2, FONT_BLACK); // |
 	draw_circle(warning_x + warning_width / 2 - warning_thickness / 2, warning_y + warning_height * 27 / 36, warning_thickness / 2, FONT_BLACK); //						 .
 
-	update_y_pos(LCD_HEIGHT * .64);
+	update_y_pos(lcd_info->yres * .64);
 	print_lcd_update(FONT_RED, FONT_BLACK, "lk3rd FastBoot Mode", MAX_NUM_CHAR_PER_LINE);
-	update_y_pos(LCD_HEIGHT * .66);
+	update_y_pos(lcd_info->yres * .66);
 
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "Product name: %s", TARGET);
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "Bootloader version: 2.0 (%s)", version.buildid);

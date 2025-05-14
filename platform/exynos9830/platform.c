@@ -396,7 +396,7 @@ void platform_early_init(void)
 	}
 
 	// Temporary, since we do not have panel driver
-	writel(0x1281, DECON0_BASE_ADDR + HW_SW_TRIG_CONTROL);
+	//writel(0x1281, DECON0_BASE_ADDR + HW_SW_TRIG_CONTROL);
 
 	read_chip_id();
 	read_chip_rev();
@@ -498,6 +498,8 @@ void platform_init(void)
 	printf("Device does not have an SD card slot! Skip SD init\n");
 #endif
 	part_init();
+
+	ret = display_drv_init();
 
 	dss_fdt_init();
 	dfd_get_dbgc_version();

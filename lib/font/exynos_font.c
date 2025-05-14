@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-#include <lk/reg.h>
 #include <sys/types.h>
 #include <string.h>
 #include <stdio.h> /* TODO : divide print_lcd function */
@@ -28,28 +27,29 @@
 #include "exynos_font.h"
 #include <dpu/lcd_ctrl.h>
 #include <target/dpu_config.h>
-
-/*
 #include <target/lcd_module.h>
-*/
 
-typedef unsigned char u8;
-typedef unsigned int u32;
 
 static u32 y_pos = 0;
 
-#define MAX_NUM_CHAR_PER_LINE		(LCD_WIDTH / (FONT_X + 1))
-#define ALPHANUMERIC_OFFSET		0
-#define LENGTH_OF_A_CHAR_ARRAY		((FONT_Y) * 2)
-#define FONT_PTR_BIT			(((FONT_X) / 2) - 1)
+#define MAX_NUM_CHAR_PER_LINE (LCD_WIDTH / (FONT_X + 1))
+#define ALPHANUMERIC_OFFSET 0
+#define LENGTH_OF_A_CHAR_ARRAY ((FONT_Y) * 2)
+#define FONT_PTR_BIT (((FONT_X) / 2) - 1)
 #ifndef LCD_OFFSET 
 #define LCD_OFFSET			0
 #endif
 
+#define PRINT_BUF_SIZE 384
+#define TOP_MARGIN      40
+extern u32 win_fb0;
+extern void decon_string_update(void);
+
 void draw_pixel(uint32_t x, uint32_t y, uint32_t color)
 {
-	volatile u32 *_fb = (u32*)0xf1000000;
-	_fb[(y + LCD_OFFSET) * LCD_WIDTH + x] = color;
+	u64 ptr = win_fb0;
+
+	((u32 *)ptr)[(y + LCD_OFFSET) * LCD_WIDTH + x] = color;
 }
 
 void draw_squircle(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t radius, uint32_t color, bool corners[4])
@@ -161,7 +161,8 @@ void draw_triangle(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint32_t 
 void clear_screen(uint32_t color)
 {
 	y_pos = 0;
-	draw_rectangle(0, 0, LCD_WIDTH, LCD_HEIGHT, color);
+	//memset((void *)0xF1000000, 0, LCD_WIDTH * LCD_HEIGHT * 8);
+	//draw_rectangle(0, 0, LCD_WIDTH, LCD_HEIGHT, color);
 }
 
 void clear_line(uint32_t color, uint32_t clear_y_pos, bool reset_y_pos)
@@ -234,13 +235,14 @@ static int _fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str,
 	int i = 0;
 	int cnt = 0;
 	char ch = 0;
+	struct exynos_panel_info *lcd_info = common_get_lcd_info();
 
 	if (lgth > MAX_NUM_CHAR_PER_LINE)
 		cnt = MAX_NUM_CHAR_PER_LINE;
 	else
 		cnt = lgth;
 
-	if (y_pos > LCD_HEIGHT - LCD_OFFSET) {
+	if (y_pos > lcd_info->yres - LCD_OFFSET) {
 		/* Rolling fb, y_pos and fb address reinit */
 		y_pos = 0;
 		fb_buf = (u32 *)CONFIG_DISPLAY_FONT_BASE_ADDRESS;
@@ -249,7 +251,7 @@ static int _fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str,
 
 	for (i = 0; i < cnt; i++) {
 		ch = *(str++);
-		if (fill_fb_one_char(fb_buf, x_pos + (i * FONT_X), LCD_WIDTH,
+		if (fill_fb_one_char(fb_buf, x_pos + (i * FONT_X), lcd_info->xres,
 			ch, y_pos + LCD_OFFSET, font_color, bg_color)) {
 			// printf("This(%c) character is not supported\n", ch);
 		}
@@ -267,7 +269,7 @@ int fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str, u32 font_color, u32 bg_color
 	int lgth = 0;
 
 	if (!str)
-		return 1;
+		return -EINVAL;
 	else
 		lgth = strlen((char *)str);
 
@@ -285,16 +287,11 @@ int fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str, u32 font_color, u32 bg_color
 	return 0;
 }
 
-#define PRINT_BUF_SIZE 384
-#define TOP_MARGIN	40
-u32 _win_fb0 = 0xf1000000;
-extern void decon_string_update(void);
-
 int print_lcd(u32 font_color, u32 bg_color, const char *fmt, ...)
 {
 	va_list args;
 	char printbuffer[PRINT_BUF_SIZE];
-	u64 ptr = _win_fb0;
+	u64 ptr = win_fb0;
 	va_start(args, fmt);
 
 	/* For this to work, printbuffer must be larger than
@@ -316,7 +313,7 @@ int print_lcd_update(u32 font_color, u32 bg_color, const char *fmt, ...)
 {
 	va_list args;
 	char printbuffer[PRINT_BUF_SIZE];
-	u64 ptr = _win_fb0;
+	u64 ptr = win_fb0;
 	va_start(args, fmt);
 
 	/* For this to work, printbuffer must be larger than
