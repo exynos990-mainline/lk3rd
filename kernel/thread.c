@@ -780,7 +780,7 @@ void thread_sleep(lk_time_t delay)
 /**
  * @brief  Initialize threading system
  *
- * This function is called once, from lk_main()
+ * This function is called once, from kmain()
  */
 void thread_init_early(void)
 {
