@@ -22,4 +22,3 @@ scripts/toolpaths.local
 .vscode
 .cache
 compile_commands.json
-toolchain
