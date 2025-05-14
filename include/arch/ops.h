@@ -57,10 +57,5 @@ __END_CDECLS
 
 #endif // !ASSEMBLY
 
-/* for the above arch enable/disable routines */
-#define ARCH_CACHE_FLAG_ICACHE 1
-#define ARCH_CACHE_FLAG_DCACHE 2
-#define ARCH_CACHE_FLAG_UCACHE (ARCH_CACHE_FLAG_ICACHE|ARCH_CACHE_FLAG_DCACHE)
-
 #include <arch/arch_ops.h>
 
