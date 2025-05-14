@@ -16,16 +16,14 @@
  */
 
 #include "runtime_service_provider.h"
+#include "types.h"
 
-#include <platform.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "types.h"
-
 namespace {
 
-constexpr auto &&kSecureBoot = "SecureBoot";
+constexpr auto &&kSecureBoot = L"SecureBoot";
 
 EFI_STATUS GetVariable(char16_t *VariableName, EfiGuid *VendorGuid,
                        uint32_t *Attributes, size_t *DataSize, void *Data) {
@@ -39,7 +37,7 @@ EFI_STATUS GetVariable(char16_t *VariableName, EfiGuid *VendorGuid,
     i += j;
   }
   buffer[i] = 0;
-  if (strncmp(buffer, kSecureBoot, sizeof(kSecureBoot)) == 0 || strcmp(buffer, "SetupMode") == 0) {
+  if (strcmp(buffer, "SecureBoot") == 0 || strcmp(buffer, "SetupMode") == 0) {
     if (DataSize) {
       *DataSize = 1;
     }
@@ -66,17 +64,10 @@ EFI_STATUS SetVariable(char16_t *VariableName, EfiGuid *VendorGuid,
   return UNSUPPORTED;
 }
 
-
-void ResetSystem(EFI_RESET_TYPE ResetType, EFI_STATUS ResetStatus,
-                        size_t DataSize, void *ResetData) {
-  platform_halt(HALT_ACTION_REBOOT, HALT_REASON_SW_RESET);
-}
-
-}  // namespace
+} // namespace
 
 void setup_runtime_service_table(EfiRuntimeService *service) {
   service->GetVariable = GetVariable;
   service->SetVariable = SetVariable;
   service->SetVirtualAddressMap = SetVirtualAddressMap;
-  service->ResetSystem = ResetSystem;
 }
