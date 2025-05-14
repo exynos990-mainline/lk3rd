@@ -1,7 +1,6 @@
 # main project for qemu-aarch64
 MODULES += \
-	app/shell \
-  lib/uefi \
+	app/shell
 
 include project/virtual/test.mk
 include project/virtual/fs.mk
