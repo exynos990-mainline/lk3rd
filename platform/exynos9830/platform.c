@@ -79,7 +79,8 @@ unsigned int board_id = CONFIG_BOARD_ID;
 int board_rev = -1;
 unsigned int secure_os_loaded = 0;
 
-char *enter_reason = (char *)"UNKNOWN REASON? YOU SHOULDN'T SEE THIS!";
+char enter_reason_c[ENTER_REASON_SIZE];
+char* enter_reason = &enter_reason_c[0];
 
 struct ufs_device_info ufs_info = {0, (char *)"UNKNOWN UFS MANUFACTURER"};
 struct ram_info dram_info = {0, (char *)"UNKNOWN DRAM MANUFACTURER", (char *)"UNKNOWN DRAM TYPE"};
