@@ -213,7 +213,11 @@ void pmic_disable_smpl(void) {
 }
 
 void pmic_shutdown(void) {
-	unsigned char reg = 0x80;
+	unsigned char reg;
+
+	speedy_read(CONFIG_SPEEDY1_BASE, S2MPS22_PM_ADDR, S2MPS22_PM_CTRL1, &reg);
+
+	reg |= (1 << 7);
 
 	speedy_write(CONFIG_SPEEDY1_BASE, S2MPS22_PM_ADDR, S2MPS22_PM_CTRL1, reg);
 }
