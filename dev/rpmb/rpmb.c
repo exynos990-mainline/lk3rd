@@ -317,7 +317,7 @@ int do_rpmb_test(int argc, char *argv[])
 	};
 
 	/* test input vector got from FIPS PUB 198-1 */
-	const uint8_t input_data[34] = { "Sample message for keylen<blocklen" };
+	const uint8_t input_data[34] = { "Sample message for keylen<blockle" };
 
 	uint8_t output_data[32];
 
