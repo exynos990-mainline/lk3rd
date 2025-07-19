@@ -20,8 +20,7 @@
  * limitations under the License.
  */
 
-#ifndef __EYXNOS_FONT_H__
-#define __EXYNOS_FONT_H__
+#pragma once
 
 #define FONT_X 16
 #define FONT_Y 27
@@ -2782,5 +2781,3 @@ static u8 const font[] = {
 	0x00, 0x00, //
 	0x00, 0x00, //
 };
-
-#endif /* __EXYNOS_FONT_H__ */
