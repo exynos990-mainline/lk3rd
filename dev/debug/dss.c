@@ -52,8 +52,15 @@ struct dss_bl static_dss_bl = {
 		{"log_platform",	{0, 0}, 0},
 		{"log_sfr",		{0, 0}, 0},
 		{"log_s2d",		{0, 0}, 0},
-		{"log_arrdumpreset",	{0, 0}, 0},
-		{"log_arrdumppanic",	{0, 0}, 0},
+		// Very hacky but gets it to compile.
+		{
+			{'l', 'o', 'g', '_', 'a', 'r', 'r', 'd', 'u', 'm', 'p', 'r', 'e', 's', 'e', 't'},
+			{0, 0}, 0
+		},
+		{
+			{'l', 'o', 'g', '_', 'a', 'r', 'r', 'd', 'u', 'm', 'p', 'p', 'a', 'n', 'i', 'c'},
+			{0, 0}, 0
+		},
 		{"log_dbgc",		{0, 0}, 0},
 		{"log_kevents",		{0, 0}, 0},
 		{"log_fatal",		{0, 0}, 0},
