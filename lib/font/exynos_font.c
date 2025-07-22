@@ -29,15 +29,8 @@
 #include <dpu/lcd_ctrl.h>
 #include <target/dpu_config.h>
 
-/*
-#include <target/lcd_module.h>
-*/
-
-typedef unsigned char u8;
-typedef unsigned int u32;
-
-static u32 y_pos = 0;
-
+#define PRINT_BUF_SIZE			384
+#define TOP_MARGIN			40
 #define MAX_NUM_CHAR_PER_LINE		(LCD_WIDTH / (FONT_X + 1))
 #define ALPHANUMERIC_OFFSET		0
 #define LENGTH_OF_A_CHAR_ARRAY		((FONT_Y) * 2)
@@ -45,6 +38,10 @@ static u32 y_pos = 0;
 #ifndef LCD_OFFSET 
 #define LCD_OFFSET			0
 #endif
+
+static u32 y_pos = 0;
+u32 _win_fb0 = 0xf1000000;
+extern void decon_string_update(void);
 
 void draw_pixel(uint32_t x, uint32_t y, uint32_t color)
 {
@@ -77,23 +74,30 @@ void draw_squircle(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint
 		}
 	}
 
-    for (uint32_t i = 0; i <= radius; i++)
-    {
-        for (uint32_t j = 0; j <= radius; j++)
-        {
-            if (i * i + j * j <= radius * radius)
-            {
-                // Top-left corner
-				if (corners[0]) draw_pixel(x + radius - i, y + radius - j, color);
+	for (uint32_t i = 0; i <= radius; i++)
+	{
+		for (uint32_t j = 0; j <= radius; j++)
+		{
+			if (i * i + j * j <= radius * radius)
+			{
+				// Top-left corner
+				if (corners[0])
+					draw_pixel(x + radius - i, y + radius - j, color);
+
 				// Top-right corner
-				if (corners[1]) draw_pixel(x + width - radius + i - 1, y + radius - j, color);
+				if (corners[1])
+					draw_pixel(x + width - radius + i - 1, y + radius - j, color);
+
 				// Bottom-left corner
-				if (corners[2]) draw_pixel(x + radius - i, y + height - radius + j - 1, color);
+				if (corners[2])
+					draw_pixel(x + radius - i, y + height - radius + j - 1, color);
+
 				// Bottom-right corner
-				if (corners[3]) draw_pixel(x + width - radius + i - 1, y + height - radius + j - 1, color);
-            }
-        }
-    }
+				if (corners[3])
+					draw_pixel(x + width - radius + i - 1, y + height - radius + j - 1, color);
+			}
+		}
+	}
 }
 
 void draw_line(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint32_t width, uint32_t color)
@@ -174,40 +178,52 @@ void clear_line(uint32_t color, uint32_t clear_y_pos, bool reset_y_pos)
 static int fill_fb_one_char(u32 *fb_buf, u32 x_pos, u32 fb_width, char ascii,
 	u32 y_pos, u32 font_color, u32 bg_color)
 {
-int i, j;
-u32 offset; /* Offset of font array, exynos_font.h */
-u32 *fb_ptr;
+	int i, j;
+	u32 offset; /* Offset of font array, exynos_font.h */
+	u32 *fb_ptr;
 
-/* From Null(0x00) to '~'(0x7E) */
-if (ascii < 32 || ascii > 126)
-	return -1;
+	/* From Null(0x00) to '~'(0x7E) */
+	if (ascii < 32 || ascii > 126)
+		return -1;
 
-offset = LENGTH_OF_A_CHAR_ARRAY * (ascii - ALPHANUMERIC_OFFSET);
+	offset = LENGTH_OF_A_CHAR_ARRAY * (ascii - ALPHANUMERIC_OFFSET);
 
-	for (i = 0; i < FONT_Y; i++) {
+	for (i = 0; i < FONT_Y; i++)
+	{
 		/* Move to fill next or start pixel of fb */
 		fb_ptr = fb_buf + ((i + y_pos) * fb_width) + x_pos;
 
 		/* Fill a first half part of a font width, 8bit */
-		for (j = 0; j < (FONT_X / 2); j++) {
-			if (font[offset] & (1 << j)) {
+		for (j = 0; j < (FONT_X / 2); j++)
+		{
+			if (font[offset] & (1 << j))
+			{
 				/* Filled area in font */
 				fb_ptr[(FONT_X / 2 - 1) - j] = font_color;
-			} else {
+			}
+			else
+			{
 				/* Unfilled area in font */
 				fb_ptr[(FONT_X / 2 - 1) - j] = bg_color;
 			}
 		}
+
 		/* Move to next (FONT / 2) pixel pointer of fb */
 		fb_ptr = fb_ptr + (FONT_X / 2);
+
 		/* Move to next (FONT / 2) pixel pointer of font */
 		offset++;
+
 		/* Fill the other half part of a font width, 8bit */
-		for (j = 0; j < (FONT_X / 2); j++) {
-			if (font[offset] & (1 << j)) {
+		for (j = 0; j < (FONT_X / 2); j++)
+		{
+			if (font[offset] & (1 << j))
+			{
 				/* Filled area in font */
 				fb_ptr[(FONT_X / 2 - 1) - j] = font_color;
-			} else {
+			}
+			else
+			{
 				/* Unfilled area in font */
 				fb_ptr[(FONT_X / 2 - 1) - j] = bg_color;
 			}
@@ -217,7 +233,7 @@ offset = LENGTH_OF_A_CHAR_ARRAY * (ascii - ALPHANUMERIC_OFFSET);
 		offset++;
 	}
 
-return 0;
+	return 0;
 }
 
 
@@ -240,14 +256,16 @@ static int _fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str,
 	else
 		cnt = lgth;
 
-	if (y_pos > LCD_HEIGHT - LCD_OFFSET) {
+	if (y_pos > LCD_HEIGHT - LCD_OFFSET)
+	{
 		/* Rolling fb, y_pos and fb address reinit */
 		y_pos = 0;
 		fb_buf = (u32 *)CONFIG_DISPLAY_FONT_BASE_ADDRESS;
 		initialize_font_fb();
 	}
 
-	for (i = 0; i < cnt; i++) {
+	for (i = 0; i < cnt; i++)
+	{
 		ch = *(str++);
 		if (fill_fb_one_char(fb_buf, x_pos + (i * FONT_X), LCD_WIDTH,
 			ch, y_pos + LCD_OFFSET, font_color, bg_color)) {
@@ -271,10 +289,12 @@ int fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str, u32 font_color, u32 bg_color
 	else
 		lgth = strlen((char *)str);
 
-	do {
+	do
+	{
 		lgth = _fill_fb_string(fb_buf, x_pos, str,
 					font_color, bg_color, lgth);
-		if (lgth) {
+		if (lgth)
+		{
 			/* for updating the position of the remaining
 			 * string points after filling one line of the LCD.
 			 */
@@ -284,11 +304,6 @@ int fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str, u32 font_color, u32 bg_color
 
 	return 0;
 }
-
-#define PRINT_BUF_SIZE 384
-#define TOP_MARGIN	40
-u32 _win_fb0 = 0xf1000000;
-extern void decon_string_update(void);
 
 int print_lcd(u32 font_color, u32 bg_color, const char *fmt, ...)
 {
@@ -304,7 +319,8 @@ int print_lcd(u32 font_color, u32 bg_color, const char *fmt, ...)
 	va_end(args);
 
 	if (fill_fb_string((u32 *)ptr, TOP_MARGIN,
-				(u8 *)printbuffer, font_color, bg_color)) {
+				(u8 *)printbuffer, font_color, bg_color))
+	{
 		printf("failed to print on lcd\n");
 		return -1;
 	}
@@ -326,7 +342,8 @@ int print_lcd_update(u32 font_color, u32 bg_color, const char *fmt, ...)
 	va_end(args);
 
 	if (fill_fb_string((u32 *)ptr, TOP_MARGIN,
-				(u8 *)printbuffer, font_color, bg_color)) {
+				(u8 *)printbuffer, font_color, bg_color))
+	{
 		printf("failed to print on lcd\n");
 		return -1;
 	}
