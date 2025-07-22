@@ -12,6 +12,7 @@
  */
 #include <platform/debug.h>
 #include <platform/uart.h>
+#include <platform/mmu/cache.h>
 #include <types.h>
 #include <stdint.h>
 #include <kernel/thread.h>
@@ -88,6 +89,8 @@ void putc_fb(char c)
 			cursor_y = 0; // Reset to the top if we overflow.
 		}
 	}
+
+	clean_invalidate_dcache_all();
 }
 
 void uart_char_out(char cData);
