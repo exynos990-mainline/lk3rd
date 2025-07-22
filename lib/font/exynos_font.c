@@ -27,6 +27,9 @@
 
 #include "exynos_font.h"
 #include <dpu/lcd_ctrl.h>
+
+#include <platform/mmu/cache.h>
+
 #include <target/dpu_config.h>
 
 #define PRINT_BUF_SIZE			384
@@ -98,6 +101,8 @@ void draw_squircle(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint
 			}
 		}
 	}
+
+	clean_invalidate_dcache_all();
 }
 
 void draw_line(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint32_t width, uint32_t color)
@@ -159,6 +164,8 @@ void draw_triangle(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint32_t 
 			}
 		}
 	}
+
+	clean_invalidate_dcache_all();
 }
 
 /* Clears the framebuffer by filling it with a specified color */
@@ -166,12 +173,16 @@ void clear_screen(uint32_t color)
 {
 	y_pos = 0;
 	draw_rectangle(0, 0, LCD_WIDTH, LCD_HEIGHT, color);
+
+	clean_invalidate_dcache_all();
 }
 
 void clear_line(uint32_t color, uint32_t clear_y_pos, bool reset_y_pos)
 {
 	if (reset_y_pos) y_pos = 0;
 	draw_rectangle(0, clear_y_pos, LCD_WIDTH, FONT_Y, color);
+
+	clean_invalidate_dcache_all();
 }
 
 /* Fill the frame buffer one character at a time */
@@ -240,6 +251,7 @@ static int fill_fb_one_char(u32 *fb_buf, u32 x_pos, u32 fb_width, char ascii,
 static void initialize_font_fb(void)
 {
 	memset((void *)CONFIG_DISPLAY_FONT_BASE_ADDRESS, 0, LCD_WIDTH * LCD_HEIGHT * 4);
+	clean_invalidate_dcache_all();
 }
 
 /* Fill one line of the frame buffer with characters */
@@ -301,6 +313,8 @@ int fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str, u32 font_color, u32 bg_color
 			str = str + MAX_NUM_CHAR_PER_LINE;
 		}
 	} while (lgth > 0);
+
+	clean_invalidate_dcache_all();
 
 	return 0;
 }
