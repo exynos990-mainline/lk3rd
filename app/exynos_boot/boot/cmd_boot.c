@@ -44,6 +44,7 @@
 #include <kernel/thread.h>
 
 #include <lk3rd/boot_reason.h>
+#include <lk3rd/kaslr_status.h>
 #include <lk3rd/mainline_quirks.h>
 
 #include <app/exynos_boot/cmd_boot.h>
@@ -74,6 +75,8 @@ struct bootargs_prop {
 };
 static struct bootargs_prop prop[32] = { { { 0, }, { 0, } }, };
 static int prop_cnt = 0;
+
+static u32 kaslr_offset;
 
 extern volatile char *bootloader_cmdline;
 
@@ -580,6 +583,7 @@ int load_boot_images(void)
 {
 	struct pit_entry *ptn;
 	cmd_args argv[6];
+	kaslr_offset = readl(0x80001004);
 
 	if (readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_RECOVERY || readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_FACTORY) {
 		ptn = pit_get_part_info("recovery");
@@ -626,7 +630,10 @@ int load_boot_images(void)
 	}
 
 	argv[1].u = BOOT_BASE;
-	argv[2].u = KERNEL_BASE;
+	if(lk3rd_get_kaslr_status() == 1)
+		argv[2].u = KERNEL_BASE + kaslr_offset;
+	else
+		argv[2].u = KERNEL_BASE;
 #if defined(CONFIG_RAMDISK_IN_BOOT)
 	argv[3].u = RAMDISK_BASE;
 #else
@@ -697,13 +704,20 @@ int cmd_boot(int argc, const cmd_args *argv)
 	clean_invalidate_dcache_all();
 	disable_mmu_dcache();
 
-	/* GTFO KASLR - you're making VaultKeeper sad :( */
-	writel(0, 0x80001000 + sizeof(u32));
+	if(lk3rd_get_kaslr_status() == 0)
+	{
+		// Turn off KASLR
+		writel(0, 0x80001004);
+	}
 
 	printf("Starting kernel...\n");
 	void (*kernel_entry)(int r0, int r1, int r2, int r3);
 
-	kernel_entry = (void (*)(int, int, int, int))KERNEL_BASE;
+	if(lk3rd_get_kaslr_status() == 1)
+		kernel_entry = (void (*)(int, int, int, int))KERNEL_BASE + kaslr_offset;
+	else
+		kernel_entry = (void (*)(int, int, int, int))KERNEL_BASE;
+
 	kernel_entry(DT_BASE, 0, 0, 0);
 
 	return 0;
@@ -738,6 +752,7 @@ int boot_fb_boot(unsigned long buf_addr, size_t size)
 	struct pit_entry *ptn;
 	cmd_args argv[7];
 	struct boot_img_hdr *b_hdr;
+	kaslr_offset = readl(0x80001004);
 
 	memset((void *)BOOT_BASE, 0, SZ_64M);
 	memcpy((void *)BOOT_BASE, (void *)buf_addr, size);
@@ -776,7 +791,11 @@ int boot_fb_boot(unsigned long buf_addr, size_t size)
 	memset((void *)RAMDISK_BASE, 0, 0x200000);
 
 	argv[1].u = BOOT_BASE;
-	argv[2].u = KERNEL_BASE;
+	if(lk3rd_get_kaslr_status() == 1)
+		argv[2].u = KERNEL_BASE + kaslr_offset;
+	else
+		argv[2].u = KERNEL_BASE;
+
 	argv[3].u = RAMDISK_BASE;
 	argv[4].u = DT_BASE;
 	argv[5].u = 0x0;
@@ -835,13 +854,20 @@ int boot_fb_boot(unsigned long buf_addr, size_t size)
 	clean_invalidate_dcache_all();
 	disable_mmu_dcache();
 
-	/* GTFO KASLR - you're making VaultKeeper sad :( */
-	writel(0, 0x80001000 + sizeof(u32));
+	if(lk3rd_get_kaslr_status() == 0)
+	{
+		// Turn off KASLR
+		writel(0, 0x80001004);
+	}
 
 	printf("Starting kernel...\n");
 	void (*kernel_entry)(int r0, int r1, int r2, int r3);
 
-	kernel_entry = (void (*)(int, int, int, int))KERNEL_BASE;
+	if(lk3rd_get_kaslr_status() == 0)
+		kernel_entry = (void (*)(int, int, int, int))KERNEL_BASE + kaslr_offset;
+	else
+		kernel_entry = (void(*)(int, int, int, int))KERNEL_BASE;
+
 	kernel_entry(DT_BASE, 0, 0, 0);
 
 	return 0;
