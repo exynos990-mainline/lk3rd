@@ -41,6 +41,7 @@
 #include <dev/scsi.h>
 #include <dev/pmucal_local.h>
 #include <lk3rd/persistent_storage.h>
+#include <lk3rd/kaslr_status.h>
 #include <lk3rd/mainline_quirks.h>
 #include <lk3rd/fastboot_menu.h>
 
@@ -242,6 +243,8 @@ const char *oem_commands[] =
 	"reboot-download",
 	"enable-mainline-quirks",
 	"disable-mainline-quirks",
+	"enable-kaslr",
+	"disable-kaslr",
 };
 
 enum oem_commands_id
@@ -250,6 +253,8 @@ enum oem_commands_id
 	OEM_REBOOT_DOWNLOAD,
 	OEM_ENABLE_MAINLINE_QUIRKS,
 	OEM_DISABLE_MAINLINE_QUIRKS,
+	OEM_ENABLE_KASLR,
+	OEM_DISABLE_KASLR,
 	OEM_CMD_END,
 };
 
@@ -1049,6 +1054,26 @@ int fb_do_oem(char *cmd_buffer, unsigned int rx_sz)
 					sprintf(response, "OKAY");
 				notify_action_switch(0);
 				break;
+
+		case OEM_ENABLE_KASLR:
+			ret = lk3rd_switch_kaslr_status(1);
+			if(ret != 1)
+				sprintf(response, "FAIL");
+			else
+				sprintf(response, "OKAY");
+
+			notify_action_switch(0);
+			break;
+
+                case OEM_DISABLE_KASLR:
+			ret = lk3rd_switch_kaslr_status(0);
+			if(ret != 0)
+				sprintf(response, "FAIL");
+			else
+				sprintf(response, "OKAY");
+
+			notify_action_switch(0);
+			break;
 
 		default:
 			sprintf(response, "FAILunsupported command");
