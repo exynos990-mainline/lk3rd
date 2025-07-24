@@ -20,6 +20,7 @@
 #include "include/lk3rd/display.h"
 #include "include/lk3rd/fastboot_menu.h"
 #include "include/lk3rd/mainline_quirks.h"
+#include "include/lk3rd/kaslr_status.h"
 #include "../lib/font/exynos_font.h"
 
 void draw_line_lcd(int color_fg, int color_bg)
@@ -204,6 +205,15 @@ void draw_menu(enum action current_action)
 		print_lcd_update(FONT_YELLOW, FONT_BLACK, empty_pad_string(strlen("Mainline quirks: "), "enabled ")); 
 	else
 		print_lcd_update(FONT_GREEN, FONT_BLACK, empty_pad_string(strlen("Mainline quirks: "), "disabled"));
+
+	orig_y_pos = get_y_pos();
+	print_lcd_update(FONT_WHITE, FONT_BLACK, "KASLR status: ");
+	update_y_pos(orig_y_pos);
+
+	if(lk3rd_get_kaslr_status() == 1)
+		print_lcd_update(FONT_GREEN, FONT_BLACK, empty_pad_string(strlen("KASLR status: "), "enabled "));
+	else
+		print_lcd_update(FONT_RED, FONT_BLACK, empty_pad_string(strlen("KASLR status: "), "disabled"));
 
 	orig_y_pos = get_y_pos();
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "Enter reason: ");
