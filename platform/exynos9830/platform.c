@@ -49,6 +49,7 @@
 #include <platform/b_rev.h>
 
 #include <lk3rd/boot_reason.h>
+#include <lk3rd/kaslr_status.h>
 #include <lk3rd/mainline_quirks.h>
 
 #ifdef CONFIG_GET_B_REV_FROM_ADC
@@ -451,11 +452,24 @@ static void print_acpm_version(void)
 #endif /* ifdef EXYNOS_ACPM_BASE */
 }
 
+void sanitise_persistent_storage(void)
+{
+	int option_enabled;
+
+        option_enabled = lk3rd_get_mainline_quirks();
+	if(option_enabled != 0 && option_enabled != 1) // Not a sane value
+		lk3rd_switch_mainline_quirks(false);
+
+	option_enabled = lk3rd_get_kaslr_status();
+	if(option_enabled != 0 && option_enabled != 1) // Not a sane value  
+		lk3rd_switch_kaslr_status(true);
+
+}
+
 void platform_init(void)
 {
 	u32 ret = 0;
 	u32 rst_stat = readl(POWER_RST_STAT);
-	int mainline_quirks_enabled;
 
 	display_flexpmu_dbg();
 	print_acpm_version();
@@ -577,8 +591,5 @@ by_dumpgpr_out:
 
 	chg_init_max77705();
 
-	mainline_quirks_enabled = lk3rd_get_mainline_quirks();
-
-	if(mainline_quirks_enabled != 0 && mainline_quirks_enabled != 1) // Not a sane value, most likely uninitialised, so we initialise it.
-		lk3rd_switch_mainline_quirks(false);
+	sanitise_persistent_storage();
 }
