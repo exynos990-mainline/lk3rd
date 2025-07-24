@@ -14,10 +14,17 @@ endif
 
 $(EXTRA_LINKER_SCRIPTS):
 
-$(ANDROID_BOOT_IMAGE) : $(OUTBIN_LK3RD)
+$(ANDROID_BOOT_IMAGE): $(OUTBIN_LK3RD)
 	@echo lk3rd: creating an android boot image for $(PROJECT)
-	mkbootimg --kernel $(OUTBIN_LK3RD) --ramdisk ./Resources/dummyramdisk $(MKBOOTIMG_ARGS) -o $@
-	@echo lk3rd: all done! image can be found at $@
+	mkbootimg --kernel $(OUTBIN_LK3RD) --ramdisk ./Resources/dummyramdisk $(MKBOOTIMG_ARGS) -o $@.tmp
+	@echo lk3rd: Padding image...
+	@pad_size=$$((2097152 - $$(stat -c "%s" $@.tmp))) && \
+		fallocate -l $$pad_size $@.pad
+	cat $@.tmp $@.pad > $@
+	rm $@.tmp $@.pad
+	@echo lk3rd: Writing default KASLR and Mainline Quirks settings...
+	printf '\x00\x00\x00\x00\x01\x00\x00\x00' | dd of=$@ bs=1 seek=$$((0x175000)) conv=notrunc
+	@echo lk3rd: all done! Image is at $@
 
 $(OUTBIN_LK3RD) : $(OUTBIN)
 	@echo lk3rd: building final image base: $(MEMBASE): $@
