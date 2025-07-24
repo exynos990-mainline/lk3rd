@@ -579,6 +579,36 @@ mem_node_out:
 
 int cmd_scatter_load_boot(int argc, const cmd_args *argv);
 
+void kaslr_warning(void)
+{
+	int warning_x = LCD_WIDTH / 20;
+	int warning_y = 103;
+	int warning_width = LCD_WIDTH * 3 / 32;
+	int warning_height = LCD_HEIGHT * .0375;
+	int warning_thickness = LCD_WIDTH / 80;
+
+	draw_rectangle(0, 0, LCD_WIDTH, 800, FONT_BLACK);
+
+	draw_rectangle(0, 5, LCD_WIDTH, (warning_height + 75) + 150, FONT_RED);
+
+	draw_triangle(warning_x + warning_width / 2, warning_y, warning_x, warning_y + warning_height, warning_x + warning_width, warning_y + warning_height, FONT_WHITE); // triangle
+	draw_full_squircle(warning_x + warning_width / 2 - warning_thickness / 2, warning_y + warning_height / 3, warning_thickness,  warning_height / 3, warning_thickness / 2, FONT_RED); // |
+	draw_circle(warning_x + warning_width / 2 - warning_thickness / 2, warning_y + warning_height * 27 / 36, warning_thickness / 2, FONT_RED); //                                          .
+
+	update_y_pos(5 + FONT_Y);
+
+	print_lcd_update(FONT_WHITE, FONT_RED, empty_pad_string((warning_x + warning_width + 18) / FONT_X, "Warning!"));
+	print_lcd_update(FONT_WHITE, FONT_RED, "");
+
+	print_lcd_update(FONT_WHITE, FONT_RED, empty_pad_string((warning_x + warning_width + 18) / FONT_X, "This device currently has KASLR disabled, this means you're"));
+	print_lcd_update(FONT_WHITE, FONT_RED, empty_pad_string((warning_x + warning_width + 18) / FONT_X, "currently running an insecure environment, this should not be used"));
+	print_lcd_update(FONT_WHITE, FONT_RED, empty_pad_string((warning_x + warning_width + 18) / FONT_X, "for daily usage, your device may currently be more prone to exploits"));
+	print_lcd_update(FONT_WHITE, FONT_RED, empty_pad_string((warning_x + warning_width + 18) / FONT_X, "If this was not intentional, please immediately reboot your phone to"));
+	print_lcd_update(FONT_WHITE, FONT_RED, empty_pad_string((warning_x + warning_width + 18) / FONT_X, "fastboot and run"));
+	print_lcd_update(FONT_WHITE, FONT_RED, "");
+	print_lcd_update(FONT_WHITE, FONT_RED, empty_pad_string((warning_x + warning_width + 18) / FONT_X, "fastboot oem enable-kaslr"));
+}
+
 int load_boot_images(void)
 {
 	struct pit_entry *ptn;
@@ -689,18 +719,24 @@ int cmd_boot(int argc, const cmd_args *argv)
 	if (readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_RECOVERY ||
 	    readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_FACTORY)
 		writel(0, EXYNOS9830_POWER_SYSIP_DAT0);
+
 	/* notify EL3 Monitor end of bootloader */
 	exynos_smc(SMC_CMD_END_OF_BOOTLOADER, 0, 0, 0);
 
 	//print_lcd_update(FONT_GREEN, FONT_BLACK, "About to jump to kernel! Good night!");
 
-	thread_sleep(100); // Give DECON ample time to render before shutdown.
+	if(kaslr_status == 0)
+	{
+		kaslr_warning();
+		thread_sleep(100); // Give DECON ample time to render before shutdown.
+	}
 
 	printf("DECON0: HW_SW_TRIG Restore\n");
 	writel(0x3070, 0x19050070);
 
 	/* before jumping to kernel. disble arch_timer */
 	arm_generic_timer_disable();
+
 	/* before jumping to kernel. disable interrupt */
 	arch_disable_ints();
 
@@ -844,7 +880,11 @@ int boot_fb_boot(unsigned long buf_addr, size_t size)
 
 	//print_lcd_update(FONT_GREEN, FONT_BLACK, "About to jump to kernel! Good night!");
 
-	thread_sleep(100); // Give DECON ample time to render before shutdown.
+	if(kaslr_status == 0)
+	{
+		kaslr_warning();
+		thread_sleep(100); // Give DECON ample time to render before shutdown.
+	}
 
 	printf("DECON0: HW_SW_TRIG Restore\n");
 	writel(0x3070, 0x19050070);

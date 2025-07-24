@@ -24,6 +24,7 @@
 #include <string.h>
 #include <stdio.h> /* TODO : divide print_lcd function */
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "exynos_font.h"
 #include <dpu/lcd_ctrl.h>
@@ -375,4 +376,16 @@ u32 get_y_pos(void)
 void update_y_pos(u32 y)
 {
 	y_pos = y;
+}
+
+const char *empty_pad_string(u32 pad, const char *str)
+{
+	u32 str_length = strlen(str);
+	char *padded_string = malloc(pad + str_length + 1);
+
+	memset(padded_string, '\200', pad);
+	memcpy(padded_string + pad, str, str_length);
+	padded_string[pad + str_length] = '\0';
+
+	return padded_string;
 }
