@@ -23,7 +23,7 @@ $(ANDROID_BOOT_IMAGE): $(OUTBIN_LK3RD)
 	cat $@.tmp $@.pad > $@
 	rm $@.tmp $@.pad
 	@echo lk3rd: Writing default KASLR and Mainline Quirks settings...
-	printf '\x01\x00\x00\x00\x01\x00\x00\x00' | dd of=$@ bs=1 seek=$$((0x175000)) conv=notrunc
+	printf '\x00\x00\x00\x00\x01\x00\x00\x00' | dd of=$@ bs=1 seek=$$((0x175000)) conv=notrunc
 	@echo lk3rd: all done! Image is at $@
 
 $(OUTBIN_LK3RD) : $(OUTBIN)
