@@ -583,6 +583,7 @@ int load_boot_images(void)
 {
 	struct pit_entry *ptn;
 	cmd_args argv[6];
+	int kaslr_status = lk3rd_get_kaslr_status();
 	kaslr_offset = readl(0x80001004);
 
 	if (readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_RECOVERY || readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_FACTORY) {
@@ -630,7 +631,7 @@ int load_boot_images(void)
 	}
 
 	argv[1].u = BOOT_BASE;
-	if(lk3rd_get_kaslr_status() == 1)
+	if(kaslr_status == 1)
 		argv[2].u = KERNEL_BASE + kaslr_offset;
 	else
 		argv[2].u = KERNEL_BASE;
@@ -652,6 +653,8 @@ int load_boot_images(void)
 
 int cmd_boot(int argc, const cmd_args *argv)
 {
+	int kaslr_status = lk3rd_get_kaslr_status();
+
 	fdt_dtb = (struct fdt_header *)DT_BASE;
 	dtbo_table = (struct dt_table_header *)DTBO_BASE;
 
@@ -704,7 +707,7 @@ int cmd_boot(int argc, const cmd_args *argv)
 	clean_invalidate_dcache_all();
 	disable_mmu_dcache();
 
-	if(lk3rd_get_kaslr_status() == 0)
+	if(kaslr_status == 0)
 	{
 		// Turn off KASLR
 		writel(0, 0x80001004);
@@ -713,7 +716,7 @@ int cmd_boot(int argc, const cmd_args *argv)
 	printf("Starting kernel...\n");
 	void (*kernel_entry)(int r0, int r1, int r2, int r3);
 
-	if(lk3rd_get_kaslr_status() == 1)
+	if(kaslr_status == 1)
 		kernel_entry = (void (*)(int, int, int, int))KERNEL_BASE + kaslr_offset;
 	else
 		kernel_entry = (void (*)(int, int, int, int))KERNEL_BASE;
@@ -752,6 +755,7 @@ int boot_fb_boot(unsigned long buf_addr, size_t size)
 	struct pit_entry *ptn;
 	cmd_args argv[7];
 	struct boot_img_hdr *b_hdr;
+	int kaslr_status = lk3rd_get_kaslr_status();
 	kaslr_offset = readl(0x80001004);
 
 	memset((void *)BOOT_BASE, 0, SZ_64M);
@@ -791,7 +795,7 @@ int boot_fb_boot(unsigned long buf_addr, size_t size)
 	memset((void *)RAMDISK_BASE, 0, 0x200000);
 
 	argv[1].u = BOOT_BASE;
-	if(lk3rd_get_kaslr_status() == 1)
+	if(kaslr_status == 1)
 		argv[2].u = KERNEL_BASE + kaslr_offset;
 	else
 		argv[2].u = KERNEL_BASE;
@@ -854,7 +858,7 @@ int boot_fb_boot(unsigned long buf_addr, size_t size)
 	clean_invalidate_dcache_all();
 	disable_mmu_dcache();
 
-	if(lk3rd_get_kaslr_status() == 0)
+	if(kaslr_status == 0)
 	{
 		// Turn off KASLR
 		writel(0, 0x80001004);
@@ -863,7 +867,7 @@ int boot_fb_boot(unsigned long buf_addr, size_t size)
 	printf("Starting kernel...\n");
 	void (*kernel_entry)(int r0, int r1, int r2, int r3);
 
-	if(lk3rd_get_kaslr_status() == 0)
+	if(kaslr_status == 1)
 		kernel_entry = (void (*)(int, int, int, int))KERNEL_BASE + kaslr_offset;
 	else
 		kernel_entry = (void(*)(int, int, int, int))KERNEL_BASE;
