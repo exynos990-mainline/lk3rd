@@ -58,4 +58,6 @@ void clear_line(uint32_t color, uint32_t line_number, bool reset_y_pos);
 u32 get_y_pos(void);
 void update_y_pos(u32 y);
 
+const char *empty_pad_string(u32 pad, const char *str);
+
 #endif /* __FONT_DISPLAY_H__ */

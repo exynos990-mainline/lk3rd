@@ -46,18 +46,6 @@ const char* add_padding(uint16_t left, uint16_t right, const char *str)
 	return padded_str;
 }
 
-const char *empty_pad_string(u32 pad, const char *str)
-{
-	u32 str_length = strlen(str);
-	char *padded_string = malloc(pad + str_length + 1);
-
-	memset(padded_string, '\200', pad);
-	memcpy(padded_string + pad, str, str_length);
-	padded_string[pad + str_length] = '\0';
-
-	return padded_string;
-}
-
 const char *title_case(const char *str) {
 	char *title_str = malloc(strlen(str) + 1);
 	int newWord = 1;
