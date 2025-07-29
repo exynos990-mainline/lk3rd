@@ -39,6 +39,7 @@
 #include <platform/dvfs_info.h>
 #include <platform/mmu/mmu_func.h>
 #include <dev/mmc.h>
+#include <dev/usb/gadget.h>
 
 #include <lib/font_display.h>
 #include <lib/logo_display.h>
@@ -470,6 +471,7 @@ void platform_init(void)
 {
 	u32 ret = 0;
 	u32 rst_stat = readl(POWER_RST_STAT);
+	char wantEnterShell = 0;
 
 	display_flexpmu_dbg();
 	print_acpm_version();
@@ -520,6 +522,18 @@ void platform_init(void)
 		dfd_run_post_processing();
 
 	dfd_display_core_stat();
+
+	// main platform initialization is done, see if we need shell
+	uart_char_in(&wantEnterShell);
+	if (wantEnterShell && wantEnterShell == '\e')
+	{
+		// todo: implement a shell here, right now just fastboot.
+		uart_string_out("** Entering shell...\n");
+		enter_reason = (char *)"UART char buffer trigger";
+		start_usb_gadget();
+		while(1){}
+	}
+
 	if (*(unsigned int *)DRAM_BASE == 0xabcdef) {
 		unsigned int dfd_en =
 			readl(EXYNOS9830_POWER_RESET_SEQUENCER_CONFIGURATION);
