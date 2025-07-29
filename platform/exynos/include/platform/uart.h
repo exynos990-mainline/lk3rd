@@ -23,6 +23,7 @@ extern unsigned int uart_log_mode;
 void uart_console_init(void);
 void uart_char_in(char *cData);
 void uart_char_out(char cData);
+void uart_string_out(const char * string);
 
 #define uart_test_function(void) uart_console_init(void)
 #define uart_simple_char_in(void) uart_char_in(void)

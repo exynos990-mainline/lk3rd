@@ -56,7 +56,6 @@ static void uart_UartInit(unsigned int uUartBase, unsigned int clk, unsigned int
 static void itoa_base_custom(unsigned int number, unsigned int uBaseUnit, unsigned int uUnitWidth, char *Converted);
 static void UART_WaitForRxReady(void);
 static void UART_WaitForTxEmpty(void);
-static void uart_string_out(const char * string);
 
 /* This is how to use sample */
 void uart_console_init(void)
@@ -161,7 +160,7 @@ void uart_char_out(char cData)
 		 uart_char_out('\r');
 }
 
-static void uart_string_out(const char * string)
+void uart_string_out(const char * string)
 {
 	while(*string)
 	{
