@@ -241,6 +241,7 @@ const char *oem_commands[] =
 {
 	"str_ram",
 	"reboot-download",
+	"reboot-eub",
 	"enable-mainline-quirks",
 	"disable-mainline-quirks",
 	"enable-kaslr",
@@ -251,6 +252,7 @@ enum oem_commands_id
 {
 	OEM_STR_RAM = 0,
 	OEM_REBOOT_DOWNLOAD,
+	OEM_REBOOT_EUB,
 	OEM_ENABLE_MAINLINE_QUIRKS,
 	OEM_DISABLE_MAINLINE_QUIRKS,
 	OEM_ENABLE_KASLR,
@@ -1014,6 +1016,85 @@ int fb_do_flashing(char *cmd_buffer, unsigned int rx_sz)
 	return 0;
 }
 
+static unsigned int watchdog_count;
+#define DIV_ROUND_UP(n,d)	(((n) + (d) - 1) / (d))
+
+void wdt_stop(void)
+{
+	unsigned long wtcon, pmu_reg;
+	pmu_reg = readl(EXYNOS9830_CLUSTER0_NONCPU_INT_EN);
+	pmu_reg &= ~EXYNOS9830_nWDTRESET_EN;
+	writel(pmu_reg, EXYNOS9830_CLUSTER0_NONCPU_INT_EN);
+
+	wtcon = readl(EXYNOS9830_WDT_WTCON);
+	wtcon &= ~(EXYNOS9830_WDT_WTCON_ENABLE | EXYNOS9830_WDT_WTCON_RSTEN);
+	writel(wtcon, EXYNOS9830_WDT_WTCON);
+
+	wtcon = readl(EXYNOS9830_WDT_WTCON);
+	writel(1, EXYNOS9830_WDT_WTCLRINT);
+
+}
+
+void wdt_start(unsigned int timeout)
+{
+	unsigned int count = timeout * (EXYNOS9830_WDT_FREQ / EXYNOS9830_WDT_INIT_PRESCALER);
+	unsigned int divisor = 1;
+	unsigned long wtcon, pmu_reg;
+
+	if (count >= 0x10000) {
+		divisor = DIV_ROUND_UP(count, 0xffff);
+
+		if (divisor > 0x100)
+			divisor = 0x100;
+	}
+
+	count = DIV_ROUND_UP(count, divisor);
+	watchdog_count = count;
+
+	/* update the pre-scaler */
+	wtcon = readl(EXYNOS9830_WDT_WTCON);
+	wtcon &= ~EXYNOS9830_WDT_PRESCALE_MASK;
+	wtcon |= EXYNOS9830_WDT_PRESCALE(divisor - 1);
+
+	writel(count, EXYNOS9830_WDT_WTDAT);
+	writel(wtcon, EXYNOS9830_WDT_WTCON);
+
+	/* watchdog start */
+	wdt_stop();
+
+	pmu_reg = readl(EXYNOS9830_CLUSTER0_NONCPU_INT_EN);
+	pmu_reg |= EXYNOS9830_nWDTRESET_EN;
+	writel(pmu_reg, EXYNOS9830_CLUSTER0_NONCPU_INT_EN);
+
+	wtcon = readl(EXYNOS9830_WDT_WTCON);
+	wtcon |= EXYNOS9830_WDT_WTCON_ENABLE | EXYNOS9830_WDT_WTCON_DIV128;
+
+	wtcon &= ~EXYNOS9830_WDT_WTCON_INTEN;
+	wtcon |= EXYNOS9830_WDT_WTCON_RSTEN;
+
+	writel(count, EXYNOS9830_WDT_WTDAT);
+	writel(count, EXYNOS9830_WDT_WTCNT);
+	writel(wtcon, EXYNOS9830_WDT_WTCON);
+
+	wtcon = readl(EXYNOS9830_WDT_WTCON);
+}
+
+void force_wdt_recovery(void)
+{
+	unsigned int reg;
+
+	reg = readl(EXYNOS9830_POWER_DREX_CALIBRATION7);
+	reg &= ~0xF;
+	reg |= 0x1;
+	writel(reg, EXYNOS9830_POWER_DREX_CALIBRATION7);
+
+	wdt_start(1);
+
+	do {
+		asm volatile("wfi");
+	} while(1);
+}
+
 int fb_do_oem(char *cmd_buffer, unsigned int rx_sz)
 {
 	int ret;
@@ -1036,6 +1117,15 @@ int fb_do_oem(char *cmd_buffer, unsigned int rx_sz)
 				platform_prepare_reboot();
 				platform_do_reboot("reboot-download");
 				break;
+
+		case OEM_REBOOT_EUB:
+			sprintf(response, "INFORebooting to EUB...\nPS_Hold will NOT be reset so your device will stay in EUB until reboot.");
+			fastboot_send_info(response, strlen(response));
+
+			sprintf(response, "OKAY");
+			fastboot_send_status(response, strlen(response), FASTBOOT_TX_ASYNC);
+			force_wdt_recovery();
+			break;
 
 		case OEM_ENABLE_MAINLINE_QUIRKS:
 				ret = lk3rd_switch_mainline_quirks(1);
