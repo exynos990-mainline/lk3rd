@@ -15,6 +15,49 @@
 #include <lib/console.h>
 #include <libfdt.h>
 
+#include <libdeflate.h>
+#include <dev/usb/gadget.h>
+#include <lk3rd/boot_reason.h>
+
+#define BAIL_TO_FASTBOOT(reason) enter_reason = (char*)reason; \
+				 start_usb_gadget(); \
+				 while (1) {}
+
+int consider_gzip_decompression(const void* kernel_boot_addr, void* kernel_addr, void* ramdisk_addr, size_t kernel_size)
+{
+	// we have to cast it to bytes to compare it
+	const uint8_t *kernel_data = (const uint8_t*)kernel_boot_addr;
+
+	// check if gzip (has to begin in 0x1f8b08)
+	if (kernel_data[0] == 0x1F && kernel_data[1] == 0x8B && kernel_data[2] == 0x08)
+	{
+		// looks like gzip
+		struct libdeflate_decompressor *d = libdeflate_alloc_decompressor();
+		if (!d)
+		{
+			BAIL_TO_FASTBOOT("could not allocate decompressor");
+		}
+
+		size_t actual_out_size = 0;
+		enum libdeflate_result res = libdeflate_gzip_decompress(d, kernel_boot_addr, kernel_size,
+									kernel_addr, ramdisk_addr - kernel_addr, &actual_out_size);
+
+		if (res != LIBDEFLATE_SUCCESS)
+		{
+			BAIL_TO_FASTBOOT("failed to decompress kernel image");
+		}
+
+		libdeflate_free_decompressor(d);
+		return 0;
+	}
+	else
+	{
+		return 1; // not gzip, let the main function handle the memcpy
+	}
+
+	return 1;
+}
+
 int cmd_scatter_load_boot(int argc, const cmd_args *argv)
 {
 	unsigned long boot_addr, kernel_addr, dtb_addr, ramdisk_addr, recovery_dtbo_addr;
@@ -64,7 +107,15 @@ int cmd_scatter_load_boot(int argc, const cmd_args *argv)
 		dtb_offset = dtb_offset + 0x40;
 
 	if (kernel_addr)
-		memcpy((void *)kernel_addr, (const void *)(boot_addr + kernel_offset), (size_t)b_hdr->kernel_size);
+	{
+		if (consider_gzip_decompression((const void *)(boot_addr + kernel_offset),
+						(void *)kernel_addr,
+						(void *)ramdisk_addr,
+						(size_t)b_hdr->kernel_size) != 0)
+			memcpy((void *)kernel_addr,
+			       (const void *)(boot_addr + kernel_offset),
+			       (size_t)b_hdr->kernel_size); // only if gzip failed
+	}
 	if (ramdisk_addr)
 		memcpy((void *)ramdisk_addr, (const void *)(boot_addr + ramdisk_offset), (size_t)b_hdr->ramdisk_size);
 	if (dtb_addr)
