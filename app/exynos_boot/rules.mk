@@ -1,6 +1,9 @@
 LOCAL_DIR := $(GET_LOCAL_DIR)
 MODULE := $(LOCAL_DIR)
 
+MODULE_DEPS += \
+	lib/libdeflate \
+
 MODULE_SRCS += \
 	$(LOCAL_DIR)/exynos_boot.c \
 	$(LOCAL_DIR)/boot/cmd_boot.c \
