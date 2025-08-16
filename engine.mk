@@ -60,7 +60,7 @@ GLOBAL_INCLUDES := $(BUILDDIR) $(addsuffix /include,$(LKINC))
 GLOBAL_OPTFLAGS ?= $(ARCH_OPTFLAGS)
 GLOBAL_COMPILEFLAGS := -g -finline -include $(CONFIGHEADER)
 GLOBAL_COMPILEFLAGS += -W -Wall -Wno-multichar -Wno-unused-parameter -Wno-unused-function -Wno-unused-label -Werror=return-type
-GLOBAL_COMPILEFLAGS += -mstrict-align
+GLOBAL_COMPILEFLAGS += -Wno-incompatible-pointer-types -mstrict-align
 GLOBAL_COMPILEFLAGS += -fno-common
 GLOBAL_COMPILEFLAGS += -fno-builtin
 GLOBAL_COMPILEFLAGS += -fno-delete-null-pointer-checks
