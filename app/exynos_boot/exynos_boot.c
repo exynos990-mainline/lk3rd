@@ -80,6 +80,14 @@ static void exynos_boot_task(const struct app_descriptor *app, void *args)
 		return;
 	}
 
+	if(readl(EXYNOS9830_POWER_SYSIP_DAT0) == (REBOOT_MODE_LK3RD | 0xE7B))
+	{
+		writel(0, EXYNOS9830_POWER_SYSIP_DAT0); // Clear reboot reason
+		enter_reason = (char *)"lk3rd request via DAT0 but set by EUB?!!";
+		start_usb_gadget();
+		return;
+	}
+
 	if (!val)
 	{
 		enter_reason = (char *)"volume down pressed";
