@@ -3,6 +3,9 @@
 # lk3rd - A (3rd stage?!) bootloader for Exynos 990 devices.
 And it gets even better...
 
+## NOTICE
+This bootloader is no longer actively being developed as Igor and I (halal-beef) no longer have devices nor the motivation to develop this further.
+
 ## What?!
 It's a lot of things.
 * a bootloader (duh?)
