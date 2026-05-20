@@ -60,4 +60,7 @@ void update_y_pos(u32 y);
 
 const char *empty_pad_string(u32 pad, const char *str);
 
+void lower_brightness(void);
+void heighten_brightness(void);
+
 #endif /* __FONT_DISPLAY_H__ */

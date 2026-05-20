@@ -28,6 +28,8 @@
 #include <dev/pmic_s2mps_19_22.h>
 #endif
 
+bool device_inactive = false;
+bool brightness_lowered = false;
 bool block_keys = false;
 enum action current_action = ACTION_START;
 
@@ -117,6 +119,30 @@ void notify_action_start(void)
 	return;
 }
 
+int inactivity_check(void *arg)
+{
+	while(true)
+	{
+		if(!device_inactive)
+		{
+			if(brightness_lowered)
+			{
+				heighten_brightness();
+				brightness_lowered = false;
+			}
+
+			thread_sleep(100);
+			continue;
+		}
+
+		if (device_inactive && !brightness_lowered)
+		{
+			lower_brightness();
+			brightness_lowered = true;
+		}
+		thread_sleep(100);
+	}
+}
 
 int fastboot_menu_entry(void *arg)
 {
@@ -148,29 +174,41 @@ int fastboot_menu_entry(void *arg)
 		{
 			repeat_delay = default_repeat_delay;
 			key_stuck = 0;
+			device_inactive = false;
 		}
 		else if (!power)
 		{
 			notify_action_start();
 			key_stuck = 3;
 			last_button_press = current_time();
+			device_inactive = false;
 			repeat_delay *= repeat_delay_multiplier;
 		}
 		else if(current_time() - last_button_press > repeat_delay || repeat_delay == default_repeat_delay)
 		{
 			if (!volup && (repeat_delay == default_repeat_delay || key_stuck == 1))
 			{
+				// Don't ask, the UI updates weirdly otherwise
+				if(device_inactive)
+					writel(0x3070, 0x19050070);
+
 				notify_action_switch(-1);
 				key_stuck = 1;
 				last_button_press = current_time();
 				repeat_delay *= repeat_delay_multiplier;
+				device_inactive = false;
 			}
 			else if (!voldown && (repeat_delay == default_repeat_delay || key_stuck == 2))
 			{
+				// Don't ask, the UI updates weirdly otherwise
+				if(device_inactive)
+					writel(0x3070, 0x19050070);
+
 				notify_action_switch(1);
 				key_stuck = 2;
 				last_button_press = current_time();
 				repeat_delay *= repeat_delay_multiplier;
+				device_inactive = false;
 			}
 			else
 			{
@@ -178,6 +216,9 @@ int fastboot_menu_entry(void *arg)
 				key_stuck = 0;
 			}
 		}
+
+		if(current_time() - last_button_press > 10000)
+			device_inactive = true;
 
 		// Don't freeze up lk.
 		thread_sleep(100);

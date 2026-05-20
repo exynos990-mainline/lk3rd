@@ -43,6 +43,7 @@
 #define LCD_OFFSET			0
 #endif
 
+extern bool brightness_lowered;
 static u32 y_pos = 0;
 u32 _win_fb0 = 0xf1000000;
 extern void decon_string_update(void);
@@ -51,6 +52,50 @@ void draw_pixel(uint32_t x, uint32_t y, uint32_t color)
 {
 	volatile u32 *_fb = (u32*)0xf1000000;
 	_fb[(y + LCD_OFFSET) * LCD_WIDTH + x] = color;
+}
+
+// Yes these are using bit magic for division and multiplication, fight me.
+
+void lower_brightness(void)
+{
+	volatile uint64_t *fb = (volatile uint64_t *)0xF1000000;
+
+	// Freeze FB updates to prevent flickering.
+	writel(0x3070, 0x19050070);
+
+	for (uint32_t i = 0; i < (LCD_WIDTH * LCD_HEIGHT) / 2; i++)
+	{
+		uint64_t c = fb[i];
+
+		fb[i] = (c & 0xFF000000FF000000ULL) |
+			((c & 0x00FCFCFC00FCFCFCULL) >> 2);
+	}
+
+	// Unfreeze FB updates.
+	writel(0x1281, 0x19050070);
+
+	clean_invalidate_dcache_all();
+}
+
+void heighten_brightness(void)
+{
+    volatile uint64_t *fb = (volatile uint64_t *)0xF1000000;
+
+	// Freeze FB updates to prevent flickering.
+	writel(0x3070, 0x19050070);
+
+    for (uint32_t i = 0; i < (LCD_WIDTH * LCD_HEIGHT) / 2; i++)
+    {
+        uint64_t c = fb[i];
+ 
+		fb[i] = (c & 0xFF000000FF000000ULL) |
+			(((c << 2) & 0x00FCFCFC00FCFCFCULL));
+	}
+
+	// Unfreeze FB updates.
+	writel(0x1281, 0x19050070);
+
+	clean_invalidate_dcache_all();
 }
 
 void draw_squircle(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t radius, uint32_t color, bool corners[4])
@@ -102,7 +147,6 @@ void draw_squircle(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint
 			}
 		}
 	}
-
 	clean_invalidate_dcache_all();
 }
 
@@ -165,7 +209,6 @@ void draw_triangle(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint32_t 
 			}
 		}
 	}
-
 	clean_invalidate_dcache_all();
 }
 
@@ -174,16 +217,12 @@ void clear_screen(uint32_t color)
 {
 	y_pos = 0;
 	draw_rectangle(0, 0, LCD_WIDTH, LCD_HEIGHT, color);
-
-	clean_invalidate_dcache_all();
 }
 
 void clear_line(uint32_t color, uint32_t clear_y_pos, bool reset_y_pos)
 {
 	if (reset_y_pos) y_pos = 0;
 	draw_rectangle(0, clear_y_pos, LCD_WIDTH, FONT_Y, color);
-
-	clean_invalidate_dcache_all();
 }
 
 /* Fill the frame buffer one character at a time */
@@ -193,6 +232,14 @@ static int fill_fb_one_char(u32 *fb_buf, u32 x_pos, u32 fb_width, char ascii,
 	int i, j;
 	u32 offset; /* Offset of font array, exynos_font.h */
 	u32 *fb_ptr;
+
+	// We can get away with this considering inactivity stuff starts pretty much after the main ui is drawn
+	// meaning we only really have to care about text when the brightness is lowered.
+	if(brightness_lowered)
+	{
+		font_color = (font_color & 0xFF000000) | ((font_color & 0x00FCFCFC) >> 2);
+		bg_color = (bg_color & 0xFF000000) | ((bg_color & 0x00FCFCFC) >> 2);
+	}
 
 	/* From Null(0x00) to '~'(0x7E) */
 	if (ascii < 32 || ascii > 126)
