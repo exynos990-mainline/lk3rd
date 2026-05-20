@@ -28,6 +28,8 @@
 #include <dev/pmic_s2mps_19_22.h>
 #endif
 
+bool device_inactive = false;
+bool brightness_lowered = false;
 bool block_keys = false;
 enum action current_action = ACTION_START;
 
@@ -43,6 +45,8 @@ void notify_action_switch(int modifier)
 
 	if((int)current_action == -1)
 		current_action = ACTION_END - 1;
+
+	device_inactive = false;
 
 	draw_menu(current_action);
 }
@@ -117,6 +121,30 @@ void notify_action_start(void)
 	return;
 }
 
+int inactivity_check(void *arg)
+{
+	while(true)
+	{
+		if(!device_inactive)
+		{
+			if(brightness_lowered)
+			{
+				heighten_brightness();
+				brightness_lowered = false;
+			}
+
+			thread_sleep(100);
+			continue;
+		}
+
+		if (device_inactive && !brightness_lowered)
+		{
+			lower_brightness();
+			brightness_lowered = true;
+		}
+		thread_sleep(100);
+	}
+}
 
 int fastboot_menu_entry(void *arg)
 {
@@ -137,6 +165,9 @@ int fastboot_menu_entry(void *arg)
 		volup = exynos_gpio_get_value(bank_volume, GPIO_VOLUP);
 		voldown = exynos_gpio_get_value(bank_volume, GPIO_VOLDOWN);
 		power = exynos_gpio_get_value(bank_power, GPIO_POWER);
+
+		if(current_time() - last_button_press > 10000)
+			device_inactive = true;
 
 		if(block_keys)
 		{
