@@ -21,6 +21,7 @@ enum action {
 };
 
 int fastboot_menu_entry(void*);
+int inactivity_check(void*);
 void notify_action_switch(int modifier);
 
 #endif /* FASTBOOT_MENU */

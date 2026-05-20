@@ -518,7 +518,16 @@ int create_fastboot_menu_thread(void)
 		DEFAULT_STACK_SIZE
 	);
 
+        thread_t *inactivity_thread = thread_create(
+		"inactivity_check",
+		&inactivity_check,
+		NULL,
+		HIGH_PRIORITY,
+		DEFAULT_STACK_SIZE
+        );
+
 	thread_resume(fastboot_menu);
+	thread_resume(inactivity_thread);
 
 	return 0;
 }
