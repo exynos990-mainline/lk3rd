@@ -23,6 +23,8 @@
 #include "include/lk3rd/kaslr_status.h"
 #include "../lib/font/exynos_font.h"
 
+u32 orig_y_pos = 0;
+
 void draw_line_lcd(int color_fg, int color_bg)
 {
 	char *str = malloc(MAX_NUM_CHAR_PER_LINE + 1);
@@ -93,8 +95,6 @@ const char* get_action_text(enum action current_action)
 
 void draw_menu(enum action current_action)
 {
-	u32 orig_y_pos = 0;
-
 	int start_offset = LCD_WIDTH / 12.1;
 
 	int chevron_height = LCD_HEIGHT / 77.2;
@@ -222,4 +222,5 @@ void draw_menu(enum action current_action)
 	print_lcd_update(FONT_WHITE, FONT_BLACK, empty_pad_string(strlen("UART: "), "disabled"));
 #endif
 	print_lcd_update(FONT_BLACK, FONT_BLACK, ""); // Padding for any device messages
+	orig_y_pos = get_y_pos() - FONT_Y;
 }
