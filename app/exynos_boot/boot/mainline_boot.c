@@ -26,6 +26,8 @@
 
 #define DEFAULT_CMDLINE "root=/dev/mem0 initrd=0x84000000,0x1000000"
 
+extern char cmd_line_override[4096 - 42];
+
 /* Hacky. */
 void arm_generic_timer_disable(void);
 int cmd_scatter_load_boot(int argc, const cmd_args *argv);
@@ -122,12 +124,19 @@ void mainline_boot_common(boot_img_hdr *b_hdr)
 	else
 		printf("No ramdisk - skipping.\n");
 
-	if (b_hdr->cmdline[0] && (!b_hdr->cmdline[BOOT_ARGS_SIZE - 1])) {
-		snprintf(cmd_line, 4096, "%s %s", DEFAULT_CMDLINE, b_hdr->cmdline);
+	// The override takes full priority over boot image cmdline and defaults.
+	if (cmd_line_override[0] != '\0') {
+		snprintf(cmd_line, 4096, "%s %s", DEFAULT_CMDLINE, cmd_line_override);
 	}
-	else {
-		printf("No cmdline - set default.\n");
-		snprintf(cmd_line, 4096, "%s", DEFAULT_CMDLINE);
+	else
+	{
+		if (b_hdr->cmdline[0] && (!b_hdr->cmdline[BOOT_ARGS_SIZE - 1])) {
+			snprintf(cmd_line, 4096, "%s %s", DEFAULT_CMDLINE, b_hdr->cmdline);
+		}
+		else {
+			printf("No cmdline - set default.\n");
+			snprintf(cmd_line, 4096, "%s", DEFAULT_CMDLINE);
+		}
 	}
 
 	ret = set_fdt_val("/chosen", "bootargs", cmd_line);
