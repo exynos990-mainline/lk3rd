@@ -31,6 +31,7 @@
 bool device_inactive = false;
 bool brightness_lowered = false;
 bool block_keys = false;
+bool in_fastboot_menu = false;
 enum action current_action = ACTION_START;
 
 void notify_action_switch(int modifier)
@@ -159,6 +160,8 @@ int fastboot_menu_entry(void *arg)
 	setup_keys(bank_power, BANK_GPA2);
 	clear_screen(FONT_BLACK);
 	draw_menu(current_action);
+
+	in_fastboot_menu = true;
 
 	while (true)
 	{

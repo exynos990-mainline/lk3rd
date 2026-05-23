@@ -44,6 +44,8 @@
 #endif
 
 extern bool brightness_lowered;
+extern bool in_fastboot_menu;
+extern u32 orig_y_pos;
 static u32 y_pos = 0;
 u32 _win_fb0 = 0xf1000000;
 extern void decon_string_update(void);
@@ -301,7 +303,7 @@ static int fill_fb_one_char(u32 *fb_buf, u32 x_pos, u32 fb_width, char ascii,
 
 static void initialize_font_fb(void)
 {
-	memset((void *)CONFIG_DISPLAY_FONT_BASE_ADDRESS, 0, LCD_WIDTH * LCD_HEIGHT * 4);
+	memset((void *)(uintptr_t)_win_fb0, 0, LCD_WIDTH * LCD_HEIGHT * 4);
 	clean_invalidate_dcache_all();
 }
 
@@ -324,7 +326,19 @@ static int _fill_fb_string(u32 *fb_buf, u32 x_pos, u8 *str,
 		/* Rolling fb, y_pos and fb address reinit */
 		y_pos = 0;
 		fb_buf = (u32 *)CONFIG_DISPLAY_FONT_BASE_ADDRESS;
-		initialize_font_fb();
+
+		if(!in_fastboot_menu)
+		{
+			initialize_font_fb();
+		}
+		else
+		{
+			for (int i = orig_y_pos; i < (LCD_HEIGHT - LCD_OFFSET); i += FONT_Y)
+			{
+				clear_line(0, i, false);
+			}
+			y_pos = orig_y_pos;
+		}
 	}
 
 	for (i = 0; i < cnt; i++)
