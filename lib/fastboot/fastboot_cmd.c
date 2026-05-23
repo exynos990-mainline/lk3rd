@@ -53,7 +53,7 @@
  * Otherwise the kernel will stuck on the early startup stage. This constant
  * is delay time, in msec.
  */
-#define USB_RX_MAGIC_DELAY	125
+#define USB_RX_MAGIC_DELAY	200
 
 extern void fastboot_send_info(char *response, unsigned int len);
 extern void fastboot_send_payload(void *buf, unsigned int len);
