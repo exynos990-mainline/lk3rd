@@ -629,7 +629,6 @@ static void flash_using_part(const char *key, char *response,
 	 */
 	if (part_get_pt_type(key)) {
 		part_update(addr, size);
-		print_lcd_update(FONT_GREEN, FONT_BLACK, "partition '%s' flashed", key);
 		sprintf(response, "OKAY");
 		return;
 	}
@@ -653,7 +652,6 @@ static void flash_using_part(const char *key, char *response,
 			sprintf(response, "FAILfailed to flash partition");
 		} else {
 			printf("partition '%s' flashed\n\n", key);
-			print_lcd_update(FONT_GREEN, FONT_BLACK, "partition '%s' flashed", key);
 			sprintf(response, "OKAY");
 		}
 	}
