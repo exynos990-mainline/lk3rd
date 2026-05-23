@@ -72,6 +72,7 @@ int extention_flag;
 static unsigned int is_ramdump = 0;
 unsigned int s_fb_on_diskdump = 0;
 static char resp_data[FB_RESPONSE_BUFFER_SIZE];
+char cmd_line_override[4096 - 42] = {0}; // Buffer size - default cmdline size
 
 int rx_handler(const unsigned char *buffer, unsigned int buffer_size);
 int fastboot_tx_mem(u64 buffer, u64 buffer_size);
@@ -245,6 +246,7 @@ const char *oem_commands[] =
 	"disable-mainline-quirks",
 	"enable-kaslr",
 	"disable-kaslr",
+	"override-mainline-cmdline",
 };
 
 enum oem_commands_id
@@ -255,6 +257,7 @@ enum oem_commands_id
 	OEM_DISABLE_MAINLINE_QUIRKS,
 	OEM_ENABLE_KASLR,
 	OEM_DISABLE_KASLR,
+	OEM_OVERRIDE_MAINLINE_CMDLINE,
 	OEM_CMD_END,
 };
 
@@ -1029,29 +1032,29 @@ int fb_do_oem(char *cmd_buffer, unsigned int rx_sz)
 			break;
 
 		case OEM_REBOOT_DOWNLOAD:
-				sprintf(response, "OKAY");
-				fastboot_send_status(response, strlen(response), FASTBOOT_TX_ASYNC);
-				platform_prepare_reboot();
-				platform_do_reboot("reboot-download");
-				break;
+			sprintf(response, "OKAY");
+			fastboot_send_status(response, strlen(response), FASTBOOT_TX_ASYNC);
+			platform_prepare_reboot();
+			platform_do_reboot("reboot-download");
+			break;
 
 		case OEM_ENABLE_MAINLINE_QUIRKS:
-				ret = lk3rd_switch_mainline_quirks(1);
-				if(ret != 1)
-					sprintf(response, "FAIL");
-				else
-					sprintf(response, "OKAY");
-				notify_action_switch(0);
-				break;
+			ret = lk3rd_switch_mainline_quirks(1);
+			if(ret != 1)
+				sprintf(response, "FAIL");
+			else
+				sprintf(response, "OKAY");
+			notify_action_switch(0);
+			break;
 
 		case OEM_DISABLE_MAINLINE_QUIRKS:
-				ret = lk3rd_switch_mainline_quirks(0);
-				if(ret != 0)
-					sprintf(response, "FAIL");
-				else
-					sprintf(response, "OKAY");
-				notify_action_switch(0);
-				break;
+			ret = lk3rd_switch_mainline_quirks(0);
+			if(ret != 0)
+				sprintf(response, "FAIL");
+			else
+				sprintf(response, "OKAY");
+			notify_action_switch(0);
+			break;
 
 		case OEM_ENABLE_KASLR:
 			ret = lk3rd_switch_kaslr_status(1);
@@ -1071,6 +1074,25 @@ int fb_do_oem(char *cmd_buffer, unsigned int rx_sz)
 				sprintf(response, "OKAY");
 
 			notify_action_switch(0);
+			break;
+
+		case OEM_OVERRIDE_MAINLINE_CMDLINE:
+			if(lk3rd_get_mainline_quirks() == 0)
+			{
+				sprintf(response, "FAILMainline quirks must be enabled to use this command");
+			}
+			else
+			{
+				if (cmd_buffer[30] == '\0') {
+					sprintf(response, "FAILNo command line provided");
+					break;
+				}
+				else
+				{
+					snprintf(cmd_line_override, 4096 - 42, "%s", cmd_buffer + 30);
+					sprintf(response, "OKAY");
+				}
+			}
 			break;
 
 		default:
