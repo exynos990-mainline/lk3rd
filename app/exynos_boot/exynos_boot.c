@@ -55,14 +55,15 @@ static void print_fastboot_reason(void)
 static void exynos_boot_task(const struct app_descriptor *app, void *args)
 {
 	struct exynos_gpio_bank *bank = (struct exynos_gpio_bank *)EXYNOS9830_GPA0CON;
-	int gpio = 4;	/* Volume down */
-	int val;
 
-	/* Volume down set Input & Pull up */
-	exynos_gpio_set_pull(bank, gpio, GPIO_PULL_UP);
-	exynos_gpio_cfg_pin(bank, gpio, GPIO_INPUT);
+	/* Volume up & down set Input & Pull up */
+	exynos_gpio_set_pull(bank, 3, GPIO_PULL_UP);
+	exynos_gpio_cfg_pin(bank, 3, GPIO_INPUT);
+
+	exynos_gpio_set_pull(bank, 4, GPIO_PULL_UP);
+	exynos_gpio_cfg_pin(bank, 4, GPIO_INPUT);
+
 	mdelay(50);
-	val = exynos_gpio_get_value(bank, gpio);
 
 	if(readl(EXYNOS9830_POWER_SYSIP_DAT0) == REBOOT_MODE_LK3RD_FAIL)
 	{
@@ -80,10 +81,16 @@ static void exynos_boot_task(const struct app_descriptor *app, void *args)
 		return;
 	}
 
-	if (!val)
+	if (!exynos_gpio_get_value(bank, 4))
 	{
 		enter_reason = (char *)"volume down pressed";
 		start_usb_gadget();
+	}
+	else if (!exynos_gpio_get_value(bank, 3))
+	{
+		printf("Booting to recovery mode\n");
+		writel(0xFF, EXYNOS9830_POWER_SYSIP_DAT0);
+		cmd_boot(0, 0);
 	}
 	else
 	{
