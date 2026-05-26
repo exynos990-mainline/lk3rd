@@ -140,7 +140,9 @@ void draw_menu(enum action current_action)
 
 	update_y_pos(LCD_HEIGHT * .64);
 	print_lcd_update(FONT_RED, FONT_BLACK, "lk3rd FastBoot Mode", MAX_NUM_CHAR_PER_LINE);
-	update_y_pos(LCD_HEIGHT * .66);
+	update_y_pos(LCD_HEIGHT * .65);
+	print_lcd_update(FONT_WHITE, FONT_BLACK, "by exynos990-mainline devs", MAX_NUM_CHAR_PER_LINE);
+	update_y_pos(LCD_HEIGHT * .67);
 
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "Product name: %s", TARGET);
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "Bootloader version: 2.3 (%s)", version.buildid);
