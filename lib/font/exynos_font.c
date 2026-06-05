@@ -33,6 +33,8 @@
 
 #include <target/dpu_config.h>
 
+#include <lib/font_display.h>
+
 #define PRINT_BUF_SIZE			384
 #define TOP_MARGIN			40
 #define MAX_NUM_CHAR_PER_LINE		(LCD_WIDTH / (FONT_X + 1))
@@ -42,6 +44,9 @@
 #ifndef LCD_OFFSET 
 #define LCD_OFFSET			0
 #endif
+
+#define WARNING_TEXT_PADDING 18
+#define MIN_BOX_HEIGHT 250
 
 extern bool brightness_lowered;
 extern bool in_fastboot_menu;
@@ -452,4 +457,186 @@ const char *empty_pad_string(u32 pad, const char *str)
 	padded_string[pad + str_length] = '\0';
 
 	return padded_string;
+}
+
+static int measure_lines(int text_pad, const char *text)
+{
+	int max_chars = MAX_NUM_CHAR_PER_LINE - text_pad;
+	int lines = 0;
+
+	while (*text)
+	{
+		int len = 0;
+		int last_space = -1;
+
+		if (*text == '\n')
+		{
+			lines++;
+			text++;
+			continue;
+		}
+
+		while (text[len] && text[len] != '\n' && len < max_chars)
+		{
+			if (text[len] == ' ')
+				last_space = len;
+			len++;
+		}
+
+		if (text[len] && text[len] != '\n' && last_space > 0)
+			len = last_space;
+
+		text += len;
+
+		while (*text == ' ')
+			text++;
+
+		lines++;
+	}
+
+	return lines;
+}
+
+static void print_status_text(u32 font_color, u32 bg_color, u32 text_pad, const char *text)
+{
+	char line[PRINT_BUF_SIZE];
+	int max_chars = MAX_NUM_CHAR_PER_LINE - text_pad;
+
+	while (*text)
+	{
+		int len = 0;
+		int last_space = -1;
+
+		if (*text == '\n')
+		{
+			update_y_pos(get_y_pos() + FONT_Y);
+			text++;
+			continue;
+		}
+
+		while (text[len] && text[len] != '\n' && len < max_chars)
+		{
+			if (text[len] == ' ')
+				last_space = len;
+			len++;
+		}
+
+		if (text[len] && text[len] != '\n' && last_space > 0)
+			len = last_space;
+
+		memcpy(line, text, len);
+		line[len] = '\0';
+
+		print_lcd_update(font_color, bg_color, empty_pad_string(text_pad, line));
+
+		text += len;
+
+		while (*text == ' ')
+			text++;
+	}
+}
+
+void show_warning(const char *title, const char *fmt, ...)
+{
+	char text_buf[PRINT_BUF_SIZE];
+
+	va_list args;
+	va_start(args, fmt);
+	vsnprintf(text_buf, sizeof(text_buf), fmt, args);
+	va_end(args);
+
+	int warning_x = LCD_WIDTH / 20;
+	int warning_width = LCD_WIDTH * 3 / 32;
+	int warning_height = LCD_HEIGHT * 3 / 80;
+	int warning_thickness = LCD_WIDTH / 80;
+
+	int text_pad = (warning_x + warning_width + WARNING_TEXT_PADDING) / FONT_X;
+
+	int body_lines = measure_lines(text_pad, text_buf);
+	int total_lines = 2 + body_lines;
+
+	int text_height = total_lines * FONT_Y;
+
+	int content_height = max(warning_height, text_height);
+
+	int box_top = 5;
+	int box_height = max(content_height + 60, MIN_BOX_HEIGHT);
+
+	int center_y = box_top + box_height / 2;
+
+	int icon_x = warning_x + warning_width / 2;
+	int icon_y = center_y - warning_height / 2;
+
+	int text_start_y = center_y - text_height / 2;
+
+	draw_rectangle(0, box_top, LCD_WIDTH, box_height, FONT_RED);
+
+	draw_triangle(icon_x, icon_y, warning_x, icon_y + warning_height, warning_x + warning_width, icon_y + warning_height, FONT_WHITE);
+
+	draw_full_squircle(icon_x - warning_thickness / 2, icon_y + warning_height / 3, warning_thickness, warning_height / 3, warning_thickness / 2, FONT_RED);
+	draw_circle(icon_x - warning_thickness / 2, icon_y + warning_height * 27 / 36, warning_thickness / 2, FONT_RED);
+
+	update_y_pos(text_start_y);
+
+	print_lcd_update(FONT_WHITE, FONT_RED, empty_pad_string(text_pad, title));
+	print_lcd_update(FONT_WHITE, FONT_RED, "");
+	print_status_text(FONT_WHITE, FONT_RED, text_pad, text_buf);
+}
+
+void show_success(const char *title, const char *fmt, ...)
+{
+	char text_buf[PRINT_BUF_SIZE];
+
+	va_list args;
+	va_start(args, fmt);
+	vsnprintf(text_buf, sizeof(text_buf), fmt, args);
+	va_end(args);
+
+	int tick_area_x = LCD_WIDTH / 20;
+	int tick_area_width = LCD_WIDTH * 3 / 32;
+	int tick_area_height = LCD_HEIGHT * 3 / 80;
+
+	int text_pad = (tick_area_x + tick_area_width + WARNING_TEXT_PADDING) / FONT_X;
+
+	int body_lines = measure_lines(text_pad, text_buf);
+	int total_lines = 2 + body_lines;
+
+	int text_height = total_lines * FONT_Y;
+	int content_height = max(tick_area_height, text_height);
+
+	int box_top = 5;
+	int box_height = max(content_height + 60, MIN_BOX_HEIGHT);
+
+	int center_y = box_top + box_height / 2;
+
+	int icon_center_x = tick_area_x + tick_area_width / 2;
+	int icon_center_y = center_y;
+
+	int text_start_y = center_y - text_height / 2;
+
+	int circle_radius = LCD_WIDTH * 3 / 64;
+
+	int tick_thickness = LCD_WIDTH / 180;
+
+	int tick_start_x = icon_center_x - circle_radius * 5 / 12;
+	int tick_start_y = icon_center_y - circle_radius / 20;
+
+	int tick_mid_x = icon_center_x - circle_radius / 4;
+	int tick_mid_y = icon_center_y + circle_radius / 4;
+
+	int tick_end_x = icon_center_x + circle_radius * 3 / 8;
+	int tick_end_y = icon_center_y - circle_radius / 4;
+
+	draw_rectangle(0, box_top, LCD_WIDTH, box_height, 0xFF00C000);
+
+	draw_circle(icon_center_x - circle_radius, icon_center_y - circle_radius, circle_radius, FONT_WHITE);
+
+	draw_line(tick_start_x, tick_start_y, tick_mid_x, tick_mid_y, tick_thickness, 0xFF00C000);
+	draw_line(tick_mid_x, tick_mid_y, tick_end_x, tick_end_y, tick_thickness, 0xFF00C000);
+
+	update_y_pos(text_start_y);
+
+	print_lcd_update(FONT_WHITE, 0xFF00C000, empty_pad_string(text_pad, title));
+	print_lcd_update(FONT_WHITE, 0xFF00C000, "");
+	print_status_text(FONT_WHITE, 0xFF00C000, text_pad, text_buf);
 }

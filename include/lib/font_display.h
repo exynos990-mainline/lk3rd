@@ -63,4 +63,7 @@ const char *empty_pad_string(u32 pad, const char *str);
 void lower_brightness(void);
 void heighten_brightness(void);
 
+void show_warning(const char *title, const char *fmt, ...);
+void show_success(const char *title, const char *fmt, ...);
+
 #endif /* __FONT_DISPLAY_H__ */
