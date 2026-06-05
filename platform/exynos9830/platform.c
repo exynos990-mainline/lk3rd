@@ -51,6 +51,7 @@
 #include <lk3rd/boot_reason.h>
 #include <lk3rd/kaslr_status.h>
 #include <lk3rd/mainline_quirks.h>
+#include <lk3rd/automatic_repartitioning.h>
 
 #ifdef CONFIG_GET_B_REV_FROM_ADC
 #include <dev/exynos_adc.h>
@@ -461,7 +462,7 @@ void sanitise_persistent_storage(void)
 		lk3rd_switch_mainline_quirks(false);
 
 	option_enabled = lk3rd_get_kaslr_status();
-	if(option_enabled != 0 && option_enabled != 1) // Not a sane value  
+	if(option_enabled != 0 && option_enabled != 1) // Not a sane value
 		lk3rd_switch_kaslr_status(true);
 
 }
@@ -513,6 +514,15 @@ void platform_init(void)
 	printf("Device does not have an SD card slot! Skip SD init\n");
 #endif
 	part_init();
+	if (add_lk3rd_part() != 0)
+	{
+		show_warning("Automatic Repartitioning", "Notice! Repartitioning failed!!\n"
+                                                         "DO NOT REBOOT THE DEVICE.\n"
+                                                         "Querying GPT rebuild...");
+
+		mdelay(3500);
+		query_gpt_rebuild(true);
+	}
 
 	dss_fdt_init();
 	dfd_get_dbgc_version();
