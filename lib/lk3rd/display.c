@@ -143,7 +143,7 @@ void draw_menu(enum action current_action)
 	update_y_pos(LCD_HEIGHT * .66);
 
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "Product name: %s", TARGET);
-	print_lcd_update(FONT_WHITE, FONT_BLACK, "Bootloader version: 2.3 (%s)", version.buildid);
+	print_lcd_update(FONT_WHITE, FONT_BLACK, "Bootloader version: 2.4 (%s)", version.buildid);
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "SoC: %s", version.platform);
 	print_lcd_update(FONT_WHITE, FONT_BLACK, "Serial (ChipID): %s", fastboot_get_serialno_string());
 
