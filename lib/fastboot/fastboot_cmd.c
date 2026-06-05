@@ -40,6 +40,7 @@
 #include <dev/rpmb.h>
 #include <dev/scsi.h>
 #include <dev/pmucal_local.h>
+#include <lk3rd/automatic_repartitioning.h>
 #include <lk3rd/persistent_storage.h>
 #include <lk3rd/kaslr_status.h>
 #include <lk3rd/mainline_quirks.h>
@@ -247,6 +248,7 @@ const char *oem_commands[] =
 	"enable-kaslr",
 	"disable-kaslr",
 	"override-mainline-cmdline",
+	"uninstall-lk3rd", // noooo
 };
 
 enum oem_commands_id
@@ -258,6 +260,7 @@ enum oem_commands_id
 	OEM_ENABLE_KASLR,
 	OEM_DISABLE_KASLR,
 	OEM_OVERRIDE_MAINLINE_CMDLINE,
+	OEM_UNINSTALL_LK3RD,
 	OEM_CMD_END,
 };
 
@@ -1093,6 +1096,37 @@ int fb_do_oem(char *cmd_buffer, unsigned int rx_sz)
 					sprintf(response, "OKAY");
 				}
 			}
+			break;
+
+		case OEM_UNINSTALL_LK3RD:
+			void *part = part_get("boot");
+			void *part_lk3rd = part_get("lk3rd");
+			struct pit_entry *boot_entry = (struct pit_entry *)part;
+			struct pit_entry *lk3rd_entry = (struct pit_entry *)part_lk3rd;
+			bdev_t *lun;
+
+			block_keys = true;
+
+			sprintf(response, "INFO"
+					  "We strongly suggest reflashing the boot partition in download mode, "
+					  "lk3rd will try it's best to preserve it's data but 1:1 parity is not guaranteed.");
+
+			fastboot_send_info(response, strlen(response));
+
+			print_lcd_update(FONT_ORANGE, FONT_BLACK, "Uninstalling lk3rd, please do not turn off/reboot your device.");
+
+			part_read(part, (void *)BOOT_BASE);
+
+			lun = bio_open("scsi0");
+
+			lun->new_write(lun, (void*)BOOT_BASE, (lk3rd_entry->blkstart << 3), (boot_entry->blknum << 3));
+
+			bio_close(lun);
+
+			sprintf(response, "OKAY");
+			fastboot_send_status(response, strlen(response), FASTBOOT_TX_ASYNC);
+
+			query_gpt_rebuild(false);
 			break;
 
 		default:
