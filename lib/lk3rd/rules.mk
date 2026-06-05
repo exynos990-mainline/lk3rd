@@ -9,5 +9,7 @@ MODULE_SRCS += \
 	$(LOCAL_DIR)/keys.c \
 	$(LOCAL_DIR)/mainline_quirks.c \
 	$(LOCAL_DIR)/persistent_storage.c \
+	$(LOCAL_DIR)/gpt.c \
+	$(LOCAL_DIR)/automatic_repartitioning.c
 
 include make/module.mk
