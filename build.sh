@@ -17,7 +17,7 @@ function print_usage() {
 	echo ""
 	echo "Flags:"
 	echo " -t --tar 		   Create a tarball of the build."
-	echo " -u -user            user mode does not enter ramdump mode when a problem occurs."
+	echo " -u --user            user mode does not enter ramdump mode when a problem occurs."
 	echo " -l --log            Enable logging."
 	echo " -v -verbose [y/N]   show make output."
 	echo " -h --help           Show this help message."
