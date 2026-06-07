@@ -15,7 +15,7 @@ void show_automatic_repartitioning_warning(void)
 {
     for (int i = 15; i > 0; i--)
     {
-        show_warning("Automatic Repartitioning", "Notice! Lk3rd will automatically repartition your device to allow boot to be modifiable in userspace without breaking lk3rd,"
+        show_warning("Automatic Repartitioning", "Notice! Lk3rd will automatically repartition your device to allow boot to be modifiable in userspace without breaking lk3rd, "
                                                  "if you do not want this, reboot now and uninstall lk3rd.\n\n"
                                                  "Starting in %ds", i);
 
@@ -40,7 +40,7 @@ void show_repartition_success(int type)
     {
         for (int i = 5; i > 0; i--)
         {
-            show_success("Automatic Repartitioning", "Successfully queried GPT rebuild, lk3rd is no longer installed on this device"
+            show_success("Automatic Repartitioning", "Successfully queried GPT rebuild, lk3rd is no longer installed on this device "
                                                      "and the next reboot Samsungs bootloader will rebuild the GPT from PIT, "
                                                      "restoring the partition table to stock.\n\n"
                                                      "Rebooting device in %ds", i);
