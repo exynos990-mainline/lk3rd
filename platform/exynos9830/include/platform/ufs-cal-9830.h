@@ -1,15 +1,3 @@
-/*
- * Copyright@ Samsung Electronics Co. LTD
- *
- * This software is proprietary of Samsung Electronics.
- *
- * No part of this software, either material or conceptual may be copied or
- * distributed, transmitted, transcribed, stored in a retrieval system or
- * translated into any human or computer language in any form by any means,
- * electronic, mechanical, manual or otherwise, or disclosed to third parties
- * without the express written permission of Samsung Electronics.
- *
- */
 struct uic_pwr_mode {
 	u8 lane;
 	u8 gear;
@@ -29,8 +17,14 @@ enum {
 	GEAR_4,
 };
 
+struct ufs_eom_result_s {
+	u32 phase;
+	u32 vref;
+	u64 err;
+};
+
 struct ufs_cal_param {
-	void *host;             /* Host adaptor */
+	void *host;		/* Host adaptor */
 	u8 available_lane;
 	u8 connected_tx_lane;
 	u8 connected_rx_lane;
@@ -42,6 +36,7 @@ struct ufs_cal_param {
 	u8 evt_ver;
 	u8 max_gear;
 	struct uic_pwr_mode *pmd;
+	struct ufs_eom_result_s **eom;
 };
 
 typedef enum {
@@ -67,6 +62,8 @@ enum {
 #define BRD_MAX		(1U << __BRD_MAX)
 #define BRD_ALL		((1U << __BRD_MAX) - 1)
 
+#define MAX_LANE	2
+
 /* UFS CAL interface */
 ufs_cal_errno ufs_cal_post_h8_enter(struct ufs_cal_param *p);
 ufs_cal_errno ufs_cal_pre_h8_exit(struct ufs_cal_param *p);
@@ -75,6 +72,12 @@ ufs_cal_errno ufs_cal_pre_pmc(struct ufs_cal_param *p);
 ufs_cal_errno ufs_cal_post_link(struct ufs_cal_param *p);
 ufs_cal_errno ufs_cal_pre_link(struct ufs_cal_param *p);
 ufs_cal_errno ufs_cal_init(struct ufs_cal_param *p, int idx);
+
+ufs_cal_errno ufs_cal_loopback_init(struct ufs_cal_param *p);
+ufs_cal_errno ufs_cal_loopback_set_1(struct ufs_cal_param *p);
+ufs_cal_errno ufs_cal_loopback_set_2(struct ufs_cal_param *p);
+
+ufs_cal_errno ufs_cal_eom(struct ufs_cal_param *p, u32 hs_gear, u32 num_of_active_rx, struct ufs_eom_result_s **eom_result);
 
 /* Adaptor for UFS CAL */
 void ufs_lld_dme_set(void *h, u32 addr, u32 val);
